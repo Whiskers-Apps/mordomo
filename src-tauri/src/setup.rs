@@ -4,45 +4,40 @@ use std::{
     io::{Read, Write},
     os::unix::net::{UnixListener, UnixStream},
     path::PathBuf,
-    process::{exit, Command},
+    process::exit,
     sync::Mutex,
     thread,
 };
 
-use mordomo_plugin::{IpcMessage, MainMessage, PluginMessage};
+use mordomo_plugin::core::MainMessage;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Listener, Manager, WebviewUrl, WebviewWindowBuilder};
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::TcpListener,
-    sync::broadcast,
-};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tracing::{error, info, warn};
 
-use crate::{apps::setup_apps, search::setup_search, state::AppState};
+use crate::{
+    actions::setup_actions, apps::setup_apps, plugins::setup_plugins_socket, search::setup_search,
+    settings::setup_settings, state::AppState,
+};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Plugin {
-    pub dir: PathBuf,
-    pub id: String,
-    pub name: String,
-    pub description: String,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct Plugin {
+//     pub dir: PathBuf,
+//     pub id: String,
+//     pub name: String,
+//     pub description: String,
+// }
 
 pub async fn setup_app(app: AppHandle) -> Result<(), Box<dyn Error>> {
-    let window_app = app.clone();
-    let main_socket_app = app.clone();
-    let plugins_socket_app = app.clone();
-    let search_app = app.clone();
-    let apps_app = app.clone();
-
+    // Set Default State
     app.manage(Mutex::new(AppState::default()));
 
-    setup_main_socket(main_socket_app)?;
-    setup_plugins_socket(plugins_socket_app).await?;
-    setup_window(window_app)?;
-    setup_search(search_app)?;
-    setup_apps(apps_app).await?;
+    setup_settings(app.clone())?;
+    setup_main_socket(app.clone())?;
+    setup_plugins_socket(app.clone()).await?;
+    setup_window(app.clone())?;
+    setup_search(app.clone())?;
+    setup_apps(app.clone()).await?;
+    setup_actions(app.clone());
 
     Ok(())
 }
@@ -118,86 +113,6 @@ fn setup_main_socket(app: AppHandle) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn setup_plugins_socket(app: AppHandle) -> Result<(), Box<dyn Error>> {
-    // let home_dir = dirs::home_dir().expect("Failed to get home directory");
-    // let plugins_dir = home_dir.clone().join(".local/share/mordomo/plugins");
-
-    let listener = TcpListener::bind("127.0.0.1:6969").await?;
-    let (transimitter, _) = broadcast::channel::<Vec<u8>>(16);
-    let transmiter_for_event = transimitter.clone();
-
-    app.listen("send-to-plugin", move |event| {
-        if let Ok(message) = serde_json::from_str::<IpcMessage>(event.payload()) {
-            let bytes = postcard::to_allocvec(&message).unwrap();
-            let _ = transmiter_for_event.send(bytes);
-        }
-    });
-
-    tokio::spawn(async move {
-        while let Ok((stream, _)) = listener.accept().await {
-            let (mut reader, mut writer) = tokio::io::split(stream);
-
-            let mut receiver = transimitter.subscribe();
-
-            let app_for_search = app.clone();
-
-            tokio::spawn(async move {
-                let mut buffer = [0u8; 1024];
-                while let Ok(n) = reader.read(&mut buffer).await {
-                    if n == 0 {
-                        break;
-                    }
-                    if let Ok(message) = postcard::from_bytes::<IpcMessage>(&buffer[..n]) {
-                        match message {
-                            IpcMessage::Main(main_message) => match main_message {
-                                MainMessage::Entries(entries) => {
-                                    app_for_search.emit("set-entries", entries).unwrap();
-                                }
-                                _ => {}
-                            },
-                            _ => {}
-                        }
-                    }
-                }
-            });
-
-            tokio::spawn(async move {
-                while let Ok(bytes) = receiver.recv().await {
-                    if writer.write_all(&bytes).await.is_err() {
-                        break;
-                    }
-                }
-            });
-        }
-    });
-
-    let plugins = vec![
-        Plugin {
-            dir: PathBuf::from("/home/lighttigerxiv/.local/share/mordomo/plugins/core-session/"),
-            id: "core-session".to_string(),
-            name: "Session".to_string(),
-            description: "bla bla bla".to_string(),
-        },
-        Plugin {
-            dir: PathBuf::from("/home/lighttigerxiv/.local/share/mordomo/plugins/core-bookmarks/"),
-            id: "core-bookmarks".to_string(),
-            name: "Bookmarks".to_string(),
-            description: "bla bla bla".to_string(),
-        },
-    ];
-
-    for plugin in plugins {
-        thread::spawn(move || {
-            Command::new("./extension")
-                .current_dir(&plugin.dir)
-                .spawn()
-                .expect(format!("Failed to execute {} extension", &plugin.id).as_str());
-        });
-    }
-
-    Ok(())
-}
-
 fn setup_window(app: AppHandle) -> Result<(), Box<dyn Error>> {
     let window = app
         .get_webview_window("main")
@@ -205,17 +120,18 @@ fn setup_window(app: AppHandle) -> Result<(), Box<dyn Error>> {
 
     window.close().expect("Failed to close main window");
 
-    // TODO: Obter tamanho pelas settings
+    let state = app.state::<Mutex<AppState>>();
+    let state = state.lock().map_err(|e| e.to_string())?;
 
     WebviewWindowBuilder::new(&app, "mordomo", WebviewUrl::App("index.html".into()))
         .title("mordomo")
         .center()
         .always_on_top(true)
         .decorations(false)
-        .inner_size(600.0, 400.0)
+        .inner_size(state.settings.width as f64, state.settings.height as f64)
         .resizable(false)
-        .build()
-        .expect("Failed to build window");
+        .build()?
+        .hide()?;
 
     Ok(())
 }

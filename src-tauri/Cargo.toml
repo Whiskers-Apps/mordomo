@@ -34,6 +34,5 @@ mordomo-plugin = { version = "0.1.0-1", path = "../../mordomo-plugin" }
 notify = "8.2.0"
 walkdir = "2.5.0"
 freedesktop-desktop-entry = "0.8.1"
-sniffer = "0.2.0"
 sniffer-rs = "1.1.2"
-
+open = "5.3.3"

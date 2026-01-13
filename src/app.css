@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+
+.bg-main{
+	background-color: var(--main);
+}
+
+.bg-secondary{
+	background-color: var(--secondary);
+}
+
+/* .hover-bg-secondary:hover{ */
+/* 	background-color: var(--secondary); */
+/* } */
+
+.bg-tertiary{
+	background-color: var(--tertiary);
+}
+
+
+/* -------------------------------------------------------------- */
+
+.text-main{
+	color: var(--text_main);
+}
+
+.text-secondary{
+	color: var(--text_secondary);
+}
+
+.text-disabled{
+	color: var(--text_disabled);
+}
+
+.placeholder::placeholder{
+	color: var(--text_secondary);
+}

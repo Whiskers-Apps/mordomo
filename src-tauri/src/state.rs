@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{apps::App, settings::Settings, setup::Plugin};
+use crate::{apps::App, plugins::PluginInfo, settings::Settings};
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppState {
     pub settings: Settings,
     pub apps: Vec<App>,
-    pub plugins: Vec<Plugin>,
+    pub plugins: Vec<PluginInfo>,
 }
 
 impl Default for AppState {

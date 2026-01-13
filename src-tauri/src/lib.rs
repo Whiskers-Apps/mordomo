@@ -1,23 +1,26 @@
 use tauri::Manager;
 
-use crate::setup::setup_app;
+use crate::{settings::get_settings, setup::setup_app};
 
+mod actions;
 mod apps;
+mod plugins;
 mod search;
 mod settings;
 mod setup;
 mod state;
+mod utils;
 
 pub fn run() {
     tracing_subscriber::fmt::init();
-    // TODO: Make This Optional but disabled by default
 
+    // TODO: Make This Optional but disabled by default
     std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
     // std::env::set_var("GDK_BACKEND", "x11");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![get_settings])
         .setup(|app| {
             let app_clone = app.app_handle().to_owned();
 
