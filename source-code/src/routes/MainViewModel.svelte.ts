@@ -11,17 +11,39 @@ export interface Entry {
 	action: Action
 }
 
-export type Action = OpenApp | RunOnPlugin | null;
+export type Action = OpenApp | OpenFile | OpenURL | CopyText | CopyImage | ShowEntries | RunOnPlugin | Core | null;
 
-export interface OpenApp {
+export type OpenApp = {
 	path: string
 }
 
-export interface RunOnPlugin {
+export type OpenFile = {
+	path: string
+}
+
+export type OpenURL = {
+	url: string
+}
+
+export type CopyText = {
+	text: string
+}
+
+export type CopyImage = {
+	image_path: string
+}
+
+export type ShowEntries = {
+	entries: Entry[]
+}
+
+export type RunOnPlugin = {
 	plugin_id: string;
 	action: string;
-	custom_indo: string[] | null
+	custom_info: string[] | null
 }
+
+export interface Core { }
 
 export type MainAction = { action: "type", searchText: string } | { action: "keydown", event: KeyboardEvent };
 
@@ -151,10 +173,12 @@ export class MainVM {
 		let entry = this.state.entries[this.state.selectionIndex];
 
 		if (entry.action) {
-			console.log(entry.action);
+			console.log(JSON.stringify(entry.action))
 			emit("exec-action", { action: entry.action });
 
-			this.resetScreen();
+			if (!("ShowEntries" in entry.action)) {
+				this.resetScreen();
+			}
 		}
 	}
 
@@ -169,8 +193,8 @@ export class MainVM {
 
 
 	private scrollIntoEntry(index: number, goingDown: boolean) {
-		const entriesDiv = document.getElementById("entries-div")!! as HTMLDivElement;
-		const entryDiv = document.getElementById(`entry-${index}`)!! as HTMLDivElement;
+		const entriesDiv = document.getElementById("entries-div") as HTMLDivElement;
+		const entryDiv = document.getElementById(`entry-${index}`) as HTMLDivElement;
 
 		const entriesRect = entriesDiv.getBoundingClientRect();
 		const entryRect = entryDiv.getBoundingClientRect();

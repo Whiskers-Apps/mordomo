@@ -51,7 +51,7 @@
 				>
 					{#if entry.icon_path}
 						<img
-							class="object-contain"
+							class="object-contain rounded-lg"
 							src={convertFileSrc(entry.icon_path)}
 							height="32"
 							width="32"

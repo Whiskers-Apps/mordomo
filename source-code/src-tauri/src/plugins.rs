@@ -3,20 +3,19 @@ use std::{
     fs::{self},
     path::PathBuf,
     process::Command,
-    sync::Mutex,
     thread,
 };
 
-use mordomo_plugin::core::{Entry, PluginMessage};
+use mordomo_core::core::{Entry, PluginMessage};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Listener, Manager};
+use tauri::{AppHandle, Emitter, Listener};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
     sync::broadcast,
 };
 
-use crate::{state::AppState, utils::get_state};
+use crate::utils::get_state;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PluginInfo {
@@ -32,11 +31,14 @@ pub async fn setup_plugins_socket(app: AppHandle) -> Result<(), Box<dyn Error>> 
     let listener = TcpListener::bind("127.0.0.1:0").await?;
     let port = listener.local_addr()?.port();
 
+    println!("Plugins Socket Port: [{}]", &port);
+
     let (transimitter, _) = broadcast::channel::<Vec<u8>>(16);
     let transmiter_for_event = transimitter.clone();
 
     app.clone().listen("send-to-plugin", move |event| {
         if let Ok(message) = serde_json::from_str::<PluginMessage>(event.payload()) {
+            println!("message to send: {:?}", &message);
             let bytes = postcard::to_allocvec(&message).unwrap();
             let _ = transmiter_for_event.send(bytes);
         }
@@ -84,6 +86,8 @@ pub async fn setup_plugins_socket(app: AppHandle) -> Result<(), Box<dyn Error>> 
 
     for plugin in get_plugins()? {
         thread::spawn(move || {
+            println!("Executing {} plugin", &plugin.id);
+
             Command::new("./extension")
                 .arg(port.to_string())
                 .current_dir(&plugin.dir.unwrap())

@@ -9,8 +9,7 @@ use std::{
     thread,
 };
 
-use mordomo_plugin::core::MainMessage;
-use serde::{Deserialize, Serialize};
+use mordomo_core::core::MainMessage;
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tracing::{error, info, warn};
 
@@ -18,14 +17,6 @@ use crate::{
     actions::setup_actions, apps::setup_apps, plugins::setup_plugins_socket, search::setup_search,
     settings::setup_settings, state::AppState,
 };
-
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// pub struct Plugin {
-//     pub dir: PathBuf,
-//     pub id: String,
-//     pub name: String,
-//     pub description: String,
-// }
 
 pub async fn setup_app(app: AppHandle) -> Result<(), Box<dyn Error>> {
     // Set Default State

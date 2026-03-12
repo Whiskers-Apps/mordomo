@@ -1,6 +1,7 @@
+use mordomo_core::settings::Settings;
 use serde::{Deserialize, Serialize};
 
-use crate::{apps::App, plugins::PluginInfo, settings::Settings};
+use crate::{apps::App, plugins::PluginInfo};
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
