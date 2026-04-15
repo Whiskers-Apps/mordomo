@@ -13,32 +13,18 @@ pub fn setup_settings(app: AppHandle) -> Result<(), Box<dyn Error>> {
     let state = app.state::<Mutex<AppState>>();
     let mut state = state.lock().expect("");
 
-    let mut settings_path =
-        dirs::config_dir().ok_or_else(|| String::from("Failed to get config dir"))?;
-
-    settings_path.push("mordomo");
-
-    if !settings_path.exists() {
-        fs::create_dir_all(&settings_path)?;
-    }
-
-    settings_path.push("settings.json");
+    let settings_path = Settings::get_path()?;
 
     if !settings_path.exists() {
         let settings = Settings::default();
-        let json = serde_json::to_string_pretty(&settings)?;
-
-        fs::write(&settings_path, &json)?;
+        settings.save()?;
 
         state.settings = settings;
 
         return Ok(());
     }
 
-    let json = fs::read(&settings_path)?;
-    let user_settings = serde_json::from_slice(&json)?;
-
-    state.settings = user_settings;
+    state.settings = Settings::get()?;
 
     let search_engine_icons_path = cache_dir()
         .ok_or_else(|| "Failed to get cache dir")?

@@ -37,7 +37,7 @@ pub fn setup_search(app: AppHandle) -> Result<(), Box<dyn Error>> {
             let state = get_state(&app);
 
             if keyword_split.has_keyword {
-                check_plugins(
+                let found_plugin = check_plugins(
                     &keyword_split,
                     &state.plugins,
                     &state.settings.keywords,
@@ -45,16 +45,19 @@ pub fn setup_search(app: AppHandle) -> Result<(), Box<dyn Error>> {
                 )
                 .expect("Failed to send plugin message");
 
-                check_search_engines(&keyword_split, &state.settings.search_engines, &app)
-                    .expect("Failed to send search engine entry");
+                let found_engine =
+                    check_search_engines(&keyword_split, &state.settings.search_engines, &app)
+                        .expect("Failed to send search engine entry");
 
-                return;
+                if found_plugin || found_engine {
+                    return;
+                }
             }
 
             let apps = state.apps.to_owned();
             let sniffer = Sniffer::new();
 
-            let app_entries = apps
+            let mut entries = apps
                 .iter()
                 .filter_map(|app| match sniffer.matches(&app.name, &text) {
                     true => Some(get_app_entry(app)),
@@ -62,8 +65,32 @@ pub fn setup_search(app: AppHandle) -> Result<(), Box<dyn Error>> {
                 })
                 .collect::<Vec<Entry>>();
 
+            if entries.is_empty() {
+                let default_engine_id = state.settings.default_engine.clone();
+                let search_engines = state.settings.search_engines.clone();
+
+                if let Some(engine_id) = default_engine_id {
+                    if let Some(search_engine) = search_engines.iter().find(|se| se.id == engine_id)
+                    {
+                        let mut entry = Entry::new(&search_engine.name)
+                            .set_subtext(format!("Search {}", &text))
+                            .set_action(Action::OpenURL(OpenURL::new(
+                                &search_engine.query.replace("%s", &text),
+                            )));
+
+                        if let Ok(icon_path) = search_engine.get_icon() {
+                            if icon_path.exists() {
+                                entry.set_icon_path(&icon_path);
+                            }
+                        }
+
+                        entries.push(entry);
+                    }
+                }
+            }
+
             app_for_emitter
-                .emit("set-entries", app_entries)
+                .emit("set-entries", entries)
                 .expect("Failed to emit");
         }
     });
@@ -76,17 +103,17 @@ fn check_plugins(
     plugins: &[PluginInfo],
     keywords: &[Keyword],
     app: &AppHandle,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<bool, Box<dyn Error>> {
     let keyword = keyword_split.keyword.to_owned();
 
     let plugin_id = match keywords.iter().find(|k| k.keyword == keyword) {
         Some(k) => k.plugin_id.to_owned(),
-        None => return Ok(()),
+        None => return Ok(false),
     };
 
     let plugin_info = match plugins.iter().find(|info| info.id == plugin_id) {
         Some(info) => info,
-        None => return Ok(()),
+        None => return Ok(false),
     };
 
     app.emit(
@@ -97,7 +124,7 @@ fn check_plugins(
         }),
     )?;
 
-    Ok(())
+    Ok(true)
 }
 
 fn get_app_entry(app: &App) -> Entry {
@@ -121,12 +148,12 @@ fn check_search_engines(
     keyword_split: &KeywordSplit,
     search_engines: &[SearchEngine],
     app: &AppHandle,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<bool, Box<dyn Error>> {
     let keyword = keyword_split.keyword.to_owned();
 
     let search_engine = match search_engines.iter().find(|se| se.keyword == keyword) {
         Some(se) => se,
-        None => return Ok(()),
+        None => return Ok(false),
     };
 
     let url = search_engine
@@ -134,21 +161,17 @@ fn check_search_engines(
         .clone()
         .replace("%s", &keyword_split.text);
 
-    let icon_path = cache_dir()
-        .ok_or_else(|| "Failed to get cache dir")?
-        .join("mordomo")
-        .join("search-engine-icons")
-        .join(&search_engine.id.to_string());
-
     let mut entry = Entry::new(&search_engine.name)
         .set_subtext(format!("Search {}", &keyword_split.text))
         .set_action(Action::OpenURL(OpenURL::new(url)));
 
-    if icon_path.exists() {
-        entry.set_icon_path(&icon_path);
+    if let Ok(icon_path) = search_engine.get_icon() {
+        if icon_path.exists() {
+            entry.set_icon_path(&icon_path);
+        }
     }
 
     app.emit("set-entries", vec![entry])?;
 
-    Ok(())
+    Ok(true)
 }

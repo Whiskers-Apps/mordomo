@@ -1,13 +1,12 @@
-use std::{
-    error::Error,
-    process::{Command, Stdio},
-    thread,
-};
+use std::{error::Error, process::Command, thread};
 
 use clap::error::Result;
-use mordomo_core::core::{
-    Action, CopyImage, CopyText, OpenApp, OpenFile, OpenURL, PluginMessage, RunCustomActionMessage,
-    RunOnPlugin, ShowEntries,
+use mordomo_core::{
+    core::{
+        Action, CopyImage, CopyText, Form, OpenApp, OpenFile, OpenURL, PluginMessage,
+        RunCustomActionMessage, RunOnPlugin, ShowEntries,
+    },
+    utils,
 };
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Listener};
@@ -47,6 +46,9 @@ pub fn setup_actions(app: AppHandle) {
             }
             Action::RunOnPlugin(action) => {
                 run_on_plugin(action, &app_for_event).expect("Failed to run plugin action");
+            }
+            Action::Form(action) => {
+                open_form(action, &app_for_event).expect("Failed to run open form action")
             }
             Action::Core => {}
         }
@@ -92,8 +94,6 @@ fn run_on_plugin(action: RunOnPlugin, app: &AppHandle) -> Result<(), Box<dyn Err
         custom_info: action.custom_info,
     });
 
-    println!("Payload sent: {:?}", &payload);
-
     app.emit("send-to-plugin", payload)?;
 
     get_window(&app)?.close()?;
@@ -110,14 +110,7 @@ fn open_url(action: OpenURL, app: &AppHandle) -> Result<(), Box<dyn Error>> {
 }
 
 fn copy_text(action: CopyText, app: &AppHandle) -> Result<(), Box<dyn Error>> {
-    tokio::spawn(async move {
-        let text_blocks: Vec<&str> = action.text.split(" ").collect();
-
-        Command::new("wl-copy")
-            .args(text_blocks)
-            .spawn()
-            .expect("Error copying to clipboard");
-    });
+    utils::copy_text(action.text)?;
 
     get_window(app)?.close()?;
 
@@ -125,17 +118,20 @@ fn copy_text(action: CopyText, app: &AppHandle) -> Result<(), Box<dyn Error>> {
 }
 
 fn copy_image(action: CopyImage, app: &AppHandle) -> Result<(), Box<dyn Error>> {
-    tokio::spawn(async move {
-        Command::new("cat")
-            .arg(format!("'{}'", action.image_path.display()))
-            .args(["|", "wl-copy", "-t", "image/png"])
-            .stdout(Stdio::piped())
-            .stdin(Stdio::piped())
-            .spawn()
-            .expect("Error copying image")
-    });
+    utils::copy_image(action.image_path)?;
 
     get_window(app)?.close()?;
+
+    Ok(())
+}
+
+fn open_form(action: Form, app: &AppHandle) -> Result<(), Box<dyn Error>> {
+    let form = action.clone();
+    let app_clone = app.clone();
+
+    app.listen("form-ack", move |_| {
+        let _ = app_clone.emit("get-form", form.clone());
+    });
 
     Ok(())
 }

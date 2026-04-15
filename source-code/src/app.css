@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
+input {
+	outline: none;
+}
 
-.bg-main{
+
+
+.bg-main {
 	background-color: var(--main);
 }
 
-.bg-secondary{
+.bg-secondary {
 	background-color: var(--secondary);
 }
 
@@ -13,25 +18,92 @@
 /* 	background-color: var(--secondary); */
 /* } */
 
-.bg-tertiary{
+.bg-tertiary {
 	background-color: var(--tertiary);
 }
 
+.hover-tertiary:hover {
+	background-color: var(--tertiary);
+}
+
+/* -------------------------------------------------------- */
+.border-secondary {
+	border-color: var(--secondary);
+}
+
+.border-text-main,
+.focus-border-text-main:focus {
+	border-color: var(--text_main);
+	outline-color: var(--text_main);
+}
+
+.bg-accent {
+	background-color: var(--accent);
+}
 
 /* -------------------------------------------------------------- */
 
-.text-main{
+.text-main {
 	color: var(--text_main);
 }
 
-.text-secondary{
+.text-secondary {
 	color: var(--text_secondary);
 }
 
-.text-disabled{
+.text-disabled {
 	color: var(--text_disabled);
 }
 
-.placeholder::placeholder{
+.text-on-accent {
+	color: var(--on_accent);
+}
+
+.placeholder::placeholder {
 	color: var(--text_secondary);
+}
+
+/* Switch */
+
+.toggle {
+	position: relative;
+	display: inline-block;
+	width: 48px;
+	height: 26px;
+}
+
+.toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.slider {
+	position: absolute;
+	inset: 0;
+	background: var(--tertiary);
+	border-radius: 999px;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.slider::before {
+	content: "";
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	left: 3px;
+	top: 3px;
+	background: white;
+	border-radius: 50%;
+	transition: transform 0.2s;
+	background-color: var(--on_accent);
+}
+
+.toggle input:checked+.slider {
+	background: var(--accent);
+}
+
+.toggle input:checked+.slider::before {
+	transform: translateX(22px);
 }

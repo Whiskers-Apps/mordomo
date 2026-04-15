@@ -9,9 +9,9 @@ use std::{
     thread,
 };
 
+use log::{debug, error, info};
 use mordomo_core::core::MainMessage;
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
-use tracing::{error, info, warn};
 
 use crate::{
     actions::setup_actions, apps::setup_apps, plugins::setup_plugins_socket, search::setup_search,
@@ -40,7 +40,7 @@ fn setup_main_socket(app: AppHandle) -> Result<(), Box<dyn Error>> {
     if socket_path.exists() {
         match UnixStream::connect(&socket_path) {
             Ok(mut stream) => {
-                info!("Socket already exists. Showing main window");
+                debug!("Socket already exists. Showing main window");
 
                 let message = MainMessage::Show;
                 let bytes = postcard::to_allocvec(&message)?;
@@ -49,7 +49,7 @@ fn setup_main_socket(app: AppHandle) -> Result<(), Box<dyn Error>> {
                 exit(0);
             }
             Err(_) => {
-                warn!("Failed to connect main socket");
+                debug!("Failed to connect main socket");
 
                 fs::remove_file(&socket_path)?;
 

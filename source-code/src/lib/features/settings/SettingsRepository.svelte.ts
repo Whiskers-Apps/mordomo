@@ -27,6 +27,8 @@ export class SettingsRepository {
 	--text_main: ${settings.theme.text_main};
 	--text_secondary: ${settings.theme.text_secondary};
 	--text_disabled: ${settings.theme.text_disabled};
+	--accent: ${settings.theme.accent};
+	--on_accent: ${settings.theme.on_accent};
 }
 </style>
 `

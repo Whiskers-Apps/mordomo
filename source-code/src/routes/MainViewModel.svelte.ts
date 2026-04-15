@@ -1,3 +1,4 @@
+import { goto } from "$app/navigation";
 import type { Settings } from "$lib/features/settings/Settings";
 import { SettingsRepository } from "$lib/features/settings/SettingsRepository.svelte";
 import { emit, listen } from "@tauri-apps/api/event";
@@ -41,6 +42,73 @@ export type RunOnPlugin = {
 	plugin_id: string;
 	action: string;
 	custom_info: string[] | null
+}
+
+export type Form = {
+	plugin_id: string;
+	title: string,
+	positive_button_text: string,
+	entries: FormEntry[],
+	custom_info: string[] | null
+}
+
+export type FormEntry = TextEntry | NumberEntry | CheckEntry | SelectEntry | PathEntry
+
+export type TextEntry = {
+	TextEntry: {
+		id: string;
+		title: string;
+		description: string;
+		value: string;
+		custom_info: string[] | null;
+	}
+}
+export type NumberEntry = {
+	NumberEntry: {
+		id: string;
+		title: string;
+		description: string;
+		value: number;
+		custom_info: string[] | null;
+	}
+}
+
+export type SelectEntry = {
+	SelectEntry: {
+		id: string;
+		title: string;
+		description: string;
+		value: string;
+		options: SelectEntryOption[],
+		custom_info: string[] | null
+	}
+}
+
+export type SelectEntryOption = {
+	id: string;
+	text: string;
+}
+
+export type CheckEntry = {
+	CheckEntry: {
+		id: string;
+		title: string;
+		description: string;
+		value: boolean
+		custom_info: string[] | null;
+	}
+}
+
+export type PathEntry = {
+	PathEntry: {
+		id: string;
+		title: string;
+		description: string;
+		value: string | null;
+		select_folder: boolean;
+		file_extensions: string[] | null;
+		custom_info: string[] | null;
+	}
 }
 
 export interface Core { }
@@ -111,7 +179,7 @@ export class MainVM {
 		listen<Entry[]>("set-entries", (event) => {
 			this.state.selectionIndex = 0;
 			this.state.entries = event.payload;
-		});
+		})
 	}
 
 	private addSettingsListener() {
@@ -173,8 +241,11 @@ export class MainVM {
 		let entry = this.state.entries[this.state.selectionIndex];
 
 		if (entry.action) {
-			console.log(JSON.stringify(entry.action))
 			emit("exec-action", { action: entry.action });
+
+			if ("Form" in entry.action) {
+				goto("/form");
+			}
 
 			if (!("ShowEntries" in entry.action)) {
 				this.resetScreen();

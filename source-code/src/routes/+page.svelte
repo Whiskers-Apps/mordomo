@@ -45,9 +45,7 @@
 				<button
 					id={`entry-${index}`}
 					class={`flex hover-bg-secondary w-full p-2 rounded-md items-center ${vm.state.selectionIndex === index ? "bg-secondary" : ""}`}
-					onclick={() => {
-						vm.onAction({ action: "entry-click", entry: entry });
-					}}
+					onclick={() => {}}
 				>
 					{#if entry.icon_path}
 						<img
@@ -55,7 +53,7 @@
 							src={convertFileSrc(entry.icon_path)}
 							height="32"
 							width="32"
-							alt="App Icon"
+							alt="Icon"
 						/>
 					{/if}
 

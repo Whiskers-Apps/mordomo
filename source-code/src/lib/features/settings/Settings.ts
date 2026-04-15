@@ -11,4 +11,6 @@ export interface Theme {
 	text_main: string;
 	text_secondary: string;
 	text_disabled: string;
+	accent: string;
+	on_accent: string;
 }

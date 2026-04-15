@@ -7,10 +7,10 @@ use std::{
 };
 
 use freedesktop_desktop_entry::{default_paths, get_languages_from_env, DesktopEntry, Iter};
+use log::info;
 use notify::{Event, Watcher};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use tracing::info;
 use tux_icons::icon_fetcher::IconFetcher;
 
 use crate::state::AppState;

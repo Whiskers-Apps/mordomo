@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Mordomo
-Comment=A launcher that serves you well
-Exec=mordomo
-Icon=mordomo
-Terminal=false
-Categories=Utility;
