@@ -4,7 +4,6 @@
 	import FolderIcon from "$lib/icons/folder.svg?component";
 	import TrashIcon from "$lib/icons/trash.svg?component";
 	import DownIcon from "$lib/icons/chevron-down.svg?component";
-	import { event } from "@tauri-apps/api";
 
 	let vm = new FormVM();
 </script>
@@ -189,7 +188,7 @@
 						<select
 							class="w-full bg-main border border-secondary p-3 rounded-xl focus-border-text-main appearance-none pr-6"
 							bind:value={entry.SelectEntry.value}
-							onchange={(e) => {
+							onchange={() => {
 								vm.onIntent({
 									intent: "select_entry_click",
 									id: entry.SelectEntry.id,

@@ -6,7 +6,7 @@ use std::{
     thread,
 };
 
-use log::{debug, info};
+use log::info;
 use mordomo_core::{
     core::{Entry, FormSubmittedMessage, PluginMessage},
     settings,

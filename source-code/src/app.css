@@ -55,6 +55,10 @@ input {
 	color: var(--text_disabled);
 }
 
+.text-accent {
+	color: var(--accent);
+}
+
 .text-on-accent {
 	color: var(--on_accent);
 }

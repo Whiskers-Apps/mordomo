@@ -1,11 +1,11 @@
 use std::error::Error;
 
-use dirs::cache_dir;
 use mordomo_core::{
     core::{Action, Entry, GetEntriesMessage, OpenApp, OpenURL, PluginMessage},
     settings::{Keyword, SearchEngine},
     utils::KeywordSplit,
 };
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sniffer_rs::sniffer::Sniffer;
 use tauri::{AppHandle, Emitter, Listener};
@@ -25,6 +25,7 @@ pub fn setup_search(app: AppHandle) -> Result<(), Box<dyn Error>> {
         if let Ok(search_payload) = serde_json::from_str::<OnSearchPayload>(&event.payload()) {
             let text = search_payload.text;
             let keyword_split = KeywordSplit::from(&text);
+            let mut entries = Vec::<Entry>::new();
 
             if text.trim().is_empty() {
                 app_for_emitter
@@ -54,10 +55,30 @@ pub fn setup_search(app: AppHandle) -> Result<(), Box<dyn Error>> {
                 }
             }
 
+            let url_regex =
+                Regex::new(r"https?://(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:/[^\s]*)?").unwrap();
+
+            let https_appended = format!("https://{}", &text);
+
+            if url_regex.is_match(&https_appended) {
+                entries.push(
+                    Entry::new("Website")
+                        .set_subtext(format!("Go to {}", &https_appended))
+                        .set_action(Action::OpenURL(OpenURL::new(https_appended)))
+                        .add_custom_info("{icon}-globe"),
+                );
+
+                app_for_emitter
+                    .emit("set-entries", entries)
+                    .expect("Failed to emit");
+
+                return;
+            }
+
             let apps = state.apps.to_owned();
             let sniffer = Sniffer::new();
 
-            let mut entries = apps
+            entries = apps
                 .iter()
                 .filter_map(|app| match sniffer.matches(&app.name, &text) {
                     true => Some(get_app_entry(app)),

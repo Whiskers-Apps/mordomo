@@ -4,6 +4,7 @@
 
 	// Icons
 	import SearchIcon from "$lib/icons/search.svg?component";
+	import GlobeIcon from "$lib/icons/globe.svg?component";
 	let vm = new MainVM();
 </script>
 
@@ -55,6 +56,8 @@
 							width="32"
 							alt="Icon"
 						/>
+					{:else if entry.custom_info?.includes("{icon}-globe")}
+						<GlobeIcon height="32" width="32" />
 					{/if}
 
 					<div class="grow text-start ml-4">
