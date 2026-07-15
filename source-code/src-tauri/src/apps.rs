@@ -6,7 +6,7 @@ use std::{
     thread,
 };
 
-use freedesktop_desktop_entry::{default_paths, get_languages_from_env, DesktopEntry, Iter};
+use freedesktop_desktop_entry::{default_paths, get_languages_from_env, Iter};
 use log::info;
 use notify::{Event, Watcher};
 use serde::{Deserialize, Serialize};
@@ -28,7 +28,7 @@ pub async fn setup_apps(app: AppHandle) -> Result<(), Box<dyn Error>> {
     let app_for_indexing = app.clone();
     let app_for_events = app.clone();
 
-    let cache_dir = dirs::cache_dir().ok_or_else(|| "Failed to get cache dir".to_string())?;
+    let cache_dir = dirs::cache_dir().ok_or("Failed to get cache directory")?;
     let apps_path = cache_dir.clone().join("mordomo/apps.bin");
 
     if apps_path.exists() {
@@ -87,60 +87,49 @@ fn index_apps(app: AppHandle) -> Result<(), Box<dyn Error>> {
     let icon_fetcher = IconFetcher::new().set_return_target_path(true);
 
     let locales = get_languages_from_env();
-    let entries = Iter::new(default_paths())
+
+    let apps: Vec<App> = Iter::new(default_paths())
         .entries(Some(&locales))
         .collect::<Vec<_>>()
         .into_iter()
         .filter_map(|entry| {
-            if entry.no_display() {
+            if entry.no_display() || entry.type_() != Some("Application") {
                 return None;
             }
 
-            if let Some(type_) = entry.type_() {
-                if type_ == "Application" {
-                    return Some(entry);
-                }
-            }
+            let name = match entry.name(&locales) {
+                Some(name) => name.to_string(),
+                None => return None,
+            };
 
-            None
+            let description = match entry.comment(&locales) {
+                Some(description) => Some(description.to_string()),
+                None => None,
+            };
+
+            let keywords: Vec<String> = match entry.keywords(&locales) {
+                Some(keywords) => keywords.into_iter().map(|key| key.to_string()).collect(),
+                None => vec![],
+            };
+
+            let icon_path = if let Some(icon) = entry.icon() {
+                icon_fetcher.get_icon_path(icon)
+            } else {
+                None
+            };
+
+            Some(App {
+                name,
+                description,
+                keywords: keywords,
+                path: entry.path,
+                icon_path,
+            })
         })
-        .collect::<Vec<DesktopEntry>>();
+        .collect();
 
-    let mut apps: Vec<App> = vec![];
-
-    for entry in entries {
-        let name = match entry.name(&locales) {
-            Some(name) => name.to_string(),
-            None => continue,
-        };
-
-        let description = match entry.comment(&locales) {
-            Some(description) => Some(description.to_string()),
-            None => None,
-        };
-
-        let keywords: Vec<String> = match entry.keywords(&locales) {
-            Some(keywords) => keywords.into_iter().map(|key| key.to_string()).collect(),
-            None => vec![],
-        };
-
-        let icon_path = if let Some(icon) = entry.icon() {
-            icon_fetcher.get_icon_path(icon)
-        } else {
-            None
-        };
-
-        apps.push(App {
-            name,
-            description,
-            keywords,
-            path: entry.path,
-            icon_path: icon_path,
-        });
-    }
-
-    let cache_dir = dirs::cache_dir().ok_or_else(|| "Failed to get cache dir".to_string())?;
-    let apps_path = cache_dir.clone().join("mordomo/apps.bin");
+    let cache_dir = dirs::cache_dir().ok_or("Failed to get cache directory")?;
+    let apps_path = cache_dir.join("mordomo/apps.bin");
 
     let bytes = postcard::to_allocvec(&apps)?;
     fs::write(&apps_path, &bytes)?;
@@ -149,6 +138,8 @@ fn index_apps(app: AppHandle) -> Result<(), Box<dyn Error>> {
 
     let mut state = state.lock().unwrap();
     state.apps = apps;
+
+    info!("Finished Indexing Apps");
 
     Ok(())
 }

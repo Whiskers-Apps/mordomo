@@ -1,3 +1,10 @@
+use std::{
+    env, fs,
+    path::PathBuf,
+    process::{exit, Command},
+};
+
+use log::info;
 use tauri::Manager;
 use tauri_plugin_log::{
     fern::colors::{Color, ColoredLevelConfig},
@@ -19,6 +26,23 @@ pub fn run() {
     // TODO: Make Setting for Compositing
     std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
     // std::env::set_var("GDK_BACKEND", "x11");
+
+    if env::args().any(|arg| arg == "--killserver" || arg == "-k") {
+        info!("Killing Mordomo by request");
+
+        let path = PathBuf::from("/tmp/mordomo/main.sock");
+
+        if path.exists() {
+            Command::new("pkill")
+                .arg("mordomo")
+                .spawn()
+                .expect("Failed to kill mordomo process");
+
+            fs::remove_file(&path).expect("Failed to remove socket");
+        }
+
+        exit(0);
+    }
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

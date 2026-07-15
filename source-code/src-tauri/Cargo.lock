@@ -5262,9 +5262,9 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tux-icons"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae547a0bdd4ab8091fd5edcbf38fd57a1dea4984dcfb29ca7e1fff59ba5bb389"
+checksum = "488008e7a8083090d6832b9f16faea4cfd386fd2269599600582b68ee340c5ed"
 dependencies = [
  "clap",
  "dirs",

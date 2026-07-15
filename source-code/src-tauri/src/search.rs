@@ -2,6 +2,7 @@ use std::error::Error;
 
 use mordomo_core::{
     core::{Action, Entry, GetEntriesMessage, OpenApp, OpenURL, PluginMessage},
+    plugins::PluginInfo,
     settings::{Keyword, SearchEngine},
     utils::KeywordSplit,
 };
@@ -10,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use sniffer_rs::sniffer::Sniffer;
 use tauri::{AppHandle, Emitter, Listener};
 
-use crate::{apps::App, plugins::PluginInfo, utils::get_state};
+use crate::{apps::App, utils::get_state};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OnSearchPayload {

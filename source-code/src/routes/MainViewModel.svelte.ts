@@ -169,6 +169,10 @@ export class MainVM {
 			event.preventDefault();
 			this.onEscape();
 		}
+
+		if (event.ctrlKey && event.key === ",") {
+			goto("/settings")
+		}
 	}
 
 

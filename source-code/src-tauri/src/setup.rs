@@ -19,7 +19,6 @@ use crate::{
 };
 
 pub async fn setup_app(app: AppHandle) -> Result<(), Box<dyn Error>> {
-    // Set Default State
     app.manage(Mutex::new(AppState::default()));
 
     setup_settings(app.clone())?;
