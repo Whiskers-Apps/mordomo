@@ -19,7 +19,7 @@
 
 	<div class="flex flex-col h-screen bg-main">
 		<div class="flex items-center p-5">
-			<SearchIcon class="h-6 w-6" />
+			<!-- <SearchIcon class="h-6 w-6" /> -->
 			<!-- svelte-ignore a11y_autofocus -->
 			<input
 				id="search-input"
@@ -45,19 +45,19 @@
 			{#each vm.state.entries as entry, index}
 				<button
 					id={`entry-${index}`}
-					class={`flex hover-bg-secondary w-full p-3 rounded-2xl items-center ${vm.state.selectionIndex === index ? "bg-secondary" : ""}`}
+					class={`flex hover-bg-secondary w-full p-2 rounded-lg items-center ${vm.state.selectionIndex === index ? "bg-secondary" : ""}`}
 					onclick={() => {}}
 				>
 					{#if entry.icon_path}
 						<img
 							class="object-contain rounded-lg mr-4"
 							src={convertFileSrc(entry.icon_path)}
-							height="32"
-							width="32"
+							height="24"
+							width="24"
 							alt="Icon"
 						/>
 					{:else if entry.custom_info?.includes("{icon}-globe")}
-						<GlobeIcon class="mr-4" height="32" width="32" />
+						<GlobeIcon class="mr-4" height="24" width="24" />
 					{/if}
 
 					<div class="grow text-start">

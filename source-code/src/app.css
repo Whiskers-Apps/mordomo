@@ -4,6 +4,11 @@ input {
 	outline: none;
 }
 
+html,
+body {
+	background-color: var(--main);
+	margin: 0;
+}
 
 
 .bg-main {

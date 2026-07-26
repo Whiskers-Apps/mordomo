@@ -6,7 +6,7 @@ use std::{
     thread,
 };
 
-use freedesktop_desktop_entry::{default_paths, get_languages_from_env, Iter};
+use freedesktop_desktop_entry::{default_paths, get_languages_from_env, DesktopEntry, Iter};
 use log::info;
 use notify::{Event, Watcher};
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use tux_icons::icon_fetcher::IconFetcher;
 
 use crate::state::AppState;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct App {
     pub name: String,
     pub description: Option<String>,
@@ -88,41 +88,50 @@ fn index_apps(app: AppHandle) -> Result<(), Box<dyn Error>> {
 
     let locales = get_languages_from_env();
 
-    let apps: Vec<App> = Iter::new(default_paths())
-        .entries(Some(&locales))
-        .collect::<Vec<_>>()
-        .into_iter()
+    // Removes Possible Repeated Entries like .local/share/applications
+    let mut distinct_paths: Vec<PathBuf> = Vec::new();
+    let mut distinct_entries: Vec<DesktopEntry> = Vec::new();
+    let all_entries: Vec<DesktopEntry> =
+        Iter::new(default_paths()).entries(Some(&locales)).collect();
+
+    for entry in &all_entries {
+        if !distinct_paths.contains(&entry.path) {
+            distinct_paths.push(entry.path.to_owned());
+            distinct_entries.push(entry.to_owned());
+        }
+    }
+
+    let apps: Vec<App> = distinct_entries
+        .iter()
         .filter_map(|entry| {
             if entry.no_display() || entry.type_() != Some("Application") {
                 return None;
             }
 
-            let name = match entry.name(&locales) {
-                Some(name) => name.to_string(),
-                None => return None,
-            };
+            let name = entry.name(&locales)?.to_string();
 
             let description = match entry.comment(&locales) {
                 Some(description) => Some(description.to_string()),
                 None => None,
             };
 
-            let keywords: Vec<String> = match entry.keywords(&locales) {
-                Some(keywords) => keywords.into_iter().map(|key| key.to_string()).collect(),
-                None => vec![],
-            };
+            let keywords: Vec<String> = entry
+                .keywords(&locales)
+                .unwrap_or(vec![])
+                .iter()
+                .map(|key| key.to_string())
+                .collect();
 
-            let icon_path = if let Some(icon) = entry.icon() {
-                icon_fetcher.get_icon_path(icon)
-            } else {
-                None
+            let icon_path = match entry.icon() {
+                Some(icon) => icon_fetcher.get_icon_path(icon),
+                None => None,
             };
 
             Some(App {
                 name,
                 description,
                 keywords: keywords,
-                path: entry.path,
+                path: entry.path.to_owned(),
                 icon_path,
             })
         })
