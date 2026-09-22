@@ -6,4 +6,5 @@ sealed interface MainScreenIntent{
     data object ArrowUpClick: MainScreenIntent
     data object ArrowDownClick: MainScreenIntent
     data object EnterClick: MainScreenIntent
+    data object SettingsShortcutClick: MainScreenIntent
 }

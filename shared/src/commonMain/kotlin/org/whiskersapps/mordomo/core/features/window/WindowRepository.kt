@@ -11,9 +11,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 
+enum class Route{
+    Main,
+    Settings
+}
+
 class WindowRepository() {
     private val _showWindow = MutableStateFlow(false)
     val showWindow = _showWindow.asStateFlow()
+
+    private val _route = MutableStateFlow(Route.Main)
+    val route = _route.asStateFlow()
 
     fun hide() {
         _showWindow.update { false }
@@ -21,5 +29,13 @@ class WindowRepository() {
 
     fun show() {
         _showWindow.update { true }
+    }
+
+    fun goToMain(){
+        _route.update { Route.Main }
+    }
+
+    fun goToSettings(){
+        _route.update { Route.Settings }
     }
 }

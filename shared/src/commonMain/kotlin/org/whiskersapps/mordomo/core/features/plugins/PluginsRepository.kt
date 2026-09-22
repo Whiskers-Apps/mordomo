@@ -4,10 +4,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import lib.CheckSetting
+import lib.NumberSetting
 import lib.PluginManifest
+import lib.SelectSetting
+import lib.TextSetting
+import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import java.io.File
+import java.util.Collections.emptyMap
 
-class PluginsRepository {
+class PluginsRepository(
+    private val settingsRepository: SettingsRepository
+) {
     companion object {
         val PLUGINS_DIR = File(System.getProperty("user.home"), ".local/share/mordomo/plugins")
     }
@@ -22,6 +30,40 @@ class PluginsRepository {
                     try {
                         val jsonContent = file.readText()
                         val manifest: PluginManifest = Json.decodeFromString(jsonContent)
+
+                        var pluginSettings: MutableMap<String, String> =
+                            settingsRepository.settings.value!!.pluginsSettings[manifest.id]?.toMutableMap()
+                                ?: emptyMap<String, String>().toMutableMap()
+
+                        for (setting in manifest.settings) {
+                            val id = when (setting) {
+                                is CheckSetting -> setting.id
+                                is NumberSetting -> setting.id
+                                is SelectSetting -> setting.id
+                                is TextSetting -> setting.id
+                            }
+
+                            if (!pluginSettings.containsKey(id)) {
+                                val value = when (setting) {
+                                    is CheckSetting -> setting.value.toString()
+                                    is NumberSetting -> setting.value.toString()
+                                    is SelectSetting -> setting.defaultOptionId
+                                    is TextSetting -> setting.value
+                                }
+
+                                pluginSettings[id] = value
+                            }
+                        }
+
+                        if (!pluginSettings.containsKey("[keyword]")){
+                            pluginSettings["[keyword]"] = ""
+                        }
+
+                        val currentSettings = settingsRepository.settings.value!!
+                        val updatedPluginsSettings = currentSettings.pluginsSettings + (manifest.id to pluginSettings)
+                        val newSettings = currentSettings.copy(pluginsSettings = updatedPluginsSettings)
+
+                        settingsRepository.update(newSettings)
 
                         manifests.add(manifest)
 

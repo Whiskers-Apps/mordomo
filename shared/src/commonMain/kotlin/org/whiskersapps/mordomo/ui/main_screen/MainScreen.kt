@@ -33,6 +33,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -124,14 +125,22 @@ fun MainScreen(
                             true
                         }
 
+                        Key.S if event.type == KeyEventType.KeyDown && event.isCtrlPressed-> {
+                            onIntent(Intent.SettingsShortcutClick)
+                            true
+                        }
+
                         else -> {
                             false
                         }
                     }
                 }
         ) {
-            Column(Modifier.fillMaxHeight().weight(1f).padding(24.dp)) {
-                Box(contentAlignment = Alignment.CenterStart) {
+            Column(
+                Modifier.fillMaxHeight()
+                    .weight(1f)
+            ) {
+                Box(Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp),contentAlignment = Alignment.CenterStart) {
                     BasicTextField(
                         modifier = Modifier.focusRequester(searchFocusRequester),
                         value = state.searchText,
@@ -158,11 +167,10 @@ fun MainScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(CircleShape)
                                 .conditional(state.selectionIndex == index) {
                                     background(MaterialTheme.colorScheme.surfaceVariant)
                                 }
-                                .padding(8.dp),
+                                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             entry.image?.let { image ->

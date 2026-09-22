@@ -27,7 +27,9 @@ import org.koin.mp.KoinPlatform.getKoin
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
 import org.whiskersapps.mordomo.core.features.icons.IconRepository
 import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
+import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
+import org.whiskersapps.mordomo.core.features.window.Route
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
 
 val appModule = module {
@@ -35,7 +37,8 @@ val appModule = module {
     single { WindowRepository() }
     single { IconRepository() }
     single { AppsRepository(get()) }
-    single { PluginsRepository() }
+    single { SettingsRepository() }
+    single { PluginsRepository(get()) }
 
     single { MainScreenVM(get(), get(), get(), get()) }
 }
@@ -45,6 +48,7 @@ fun main() {
 
     val windowRepository = getKoin().get<WindowRepository>()
     val socketRepository = getKoin().get<SocketRepository>()
+    val settingsRepository = getKoin().get<SettingsRepository>()
 
     Runtime.getRuntime().addShutdownHook(Thread {
         CoroutineScope(Dispatchers.Default).launch {
@@ -60,8 +64,6 @@ fun main() {
             size = DpSize(800.dp, 500.dp)
         )
 
-
-
         Window(
             state = windowState,
             onCloseRequest = { windowRepository.hide() },
@@ -71,14 +73,24 @@ fun main() {
             resizable = false,
             visible = showWindow
         ) {
-            LaunchedEffect(showWindow) {
-                if (showWindow) {
-                    window.toFront()
-                    window.requestFocus()
+            if (settingsRepository.settings.collectAsState().value != null) {
+                LaunchedEffect(showWindow) {
+                    if (showWindow) {
+                        window.toFront()
+                        window.requestFocus()
+                    }
+                }
+
+                when (windowRepository.route.collectAsState().value) {
+                    Route.Main -> {
+                        MainScreenRoot()
+                    }
+
+                    Route.Settings -> {
+
+                    }
                 }
             }
-
-            MainScreenRoot()
         }
     }
 }

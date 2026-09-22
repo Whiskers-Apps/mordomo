@@ -48,37 +48,7 @@ class MainScreenVM(
     init {
         _state.update {
             it.copy(
-                entries = listOf(
-                    Entry(title = "Test Open App", actions = listOf(OpenApp("", "firefox.desktop"))),
-                    Entry(title = "Test Copy Text", actions = listOf(CopyText("", "lorem ipsum"))),
-                    Entry(
-                        title = "Test Copy Image", actions = listOf(
-                            CopyImage(
-                                "",
-                                "/home/lighttigerxiv/Pictures/profile/tiger.jpg"
-                            )
-                        )
-                    ),
-                    Entry(
-                        title = "Test Open Url", actions = listOf(
-                            OpenUrl(
-                                "",
-                                "https://noai.duckduckgo.com/&q=lorem ipsum"
-                            )
-                        )
-                    ),
-                    Entry(
-                        title = "Test Show Entries", actions = listOf(
-                            ShowEntries(
-                                "", listOf(
-                                    Entry(title = "1", actions = listOf(CopyText("", "1"))),
-                                    Entry(title = "2", actions = listOf(CopyText("", "2"))),
-                                    Entry(title = "3", actions = listOf(CopyText("", "3"))),
-                                )
-                            )
-                        )
-                    ),
-                )
+                entries = emptyList()
             )
         }
 
@@ -99,6 +69,7 @@ class MainScreenVM(
             Intent.ArrowDownClick -> onArrowDownClick()
             Intent.ArrowUpClick -> onArrowUpClick()
             Intent.EnterClick -> onEnterClick()
+            Intent.SettingsShortcutClick -> onSettingsShortcutClick()
         }
     }
 
@@ -108,7 +79,7 @@ class MainScreenVM(
         scope.launch {
 
             if (text.isBlank()) {
-                _state.update { it.copy(entries = emptyList()) }
+                _state.update { it.copy(entries = emptyList(), context = "") }
                 return@launch
             }
 
@@ -206,5 +177,9 @@ class MainScreenVM(
         }
 
         _state.update { MainScreenState() }
+    }
+
+    private fun onSettingsShortcutClick() {
+        scope.launch { windowRepository.goToSettings() }
     }
 }
