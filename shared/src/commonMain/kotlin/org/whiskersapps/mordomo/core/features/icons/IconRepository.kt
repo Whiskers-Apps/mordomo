@@ -143,7 +143,7 @@ class IconRepository {
             if (!dir.exists() || !dir.isDirectory) continue
 
             dir.walkTopDown()
-                .onEnter { true } // segue para dentro das subpastas (equivalente a follow_links)
+                .onEnter { true }
                 .filter { it.isFile }
                 .forEach { file ->
                     val ext = file.extension.lowercase()

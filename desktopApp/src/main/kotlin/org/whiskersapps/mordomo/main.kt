@@ -26,6 +26,7 @@ import org.koin.mp.KoinPlatform.getKoin
 
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
 import org.whiskersapps.mordomo.core.features.icons.IconRepository
+import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
 
@@ -34,8 +35,9 @@ val appModule = module {
     single { WindowRepository() }
     single { IconRepository() }
     single { AppsRepository(get()) }
+    single { PluginsRepository() }
 
-    single { MainScreenVM(get(), get()) }
+    single { MainScreenVM(get(), get(), get(), get()) }
 }
 
 fun main() {
@@ -58,6 +60,8 @@ fun main() {
             size = DpSize(800.dp, 500.dp)
         )
 
+
+
         Window(
             state = windowState,
             onCloseRequest = { windowRepository.hide() },
@@ -67,6 +71,13 @@ fun main() {
             resizable = false,
             visible = showWindow
         ) {
+            LaunchedEffect(showWindow) {
+                if (showWindow) {
+                    window.toFront()
+                    window.requestFocus()
+                }
+            }
+
             MainScreenRoot()
         }
     }

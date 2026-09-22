@@ -27,7 +27,7 @@ compose.desktop {
         mainClass = "org.whiskersapps.mordomo.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.AppImage)
             packageName = "mordomo"
             packageVersion = "1.0.0"
         }

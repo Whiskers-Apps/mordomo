@@ -3,30 +3,40 @@ package org.whiskersapps.mordomo.ui.main_screen
 import com.whiskersapps.lib.Sniffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.whiskersapps.mordomo.core.features.actions.Action
+import lib.Action
+import lib.CopyImage
+import lib.CopyText
+import lib.Entry
+import lib.GetEntries
+import lib.OpenApp
+import lib.OpenUrl
+import lib.Plugin
+import lib.PluginMessage
+import lib.ShowEntries
 import org.whiskersapps.mordomo.core.features.actions.ActionHandler
-import org.whiskersapps.mordomo.core.features.actions.CopyImage
-import org.whiskersapps.mordomo.core.features.actions.CopyText
-import org.whiskersapps.mordomo.core.features.actions.OpenApp
-import org.whiskersapps.mordomo.core.features.actions.OpenUrl
-import org.whiskersapps.mordomo.core.features.actions.Plugin
-import org.whiskersapps.mordomo.core.features.actions.ShowEntries
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
-import org.whiskersapps.mordomo.core.features.entries.Entry
+import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
+import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState
-import java.util.Locale.getDefault
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenIntent as Intent
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState as State
 
 class MainScreenVM(
     val appsRepository: AppsRepository,
-    val windowRepository: WindowRepository
+    val windowRepository: WindowRepository,
+    val socketRepository: SocketRepository,
+    val pluginsRepository: PluginsRepository
 ) {
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -41,16 +51,45 @@ class MainScreenVM(
                 entries = listOf(
                     Entry(title = "Test Open App", actions = listOf(OpenApp("", "firefox.desktop"))),
                     Entry(title = "Test Copy Text", actions = listOf(CopyText("", "lorem ipsum"))),
-                    Entry(title = "Test Copy Image", actions = listOf(CopyImage("", "/home/lighttigerxiv/Pictures/profile/tiger.jpg"))),
-                    Entry(title = "Test Open Url", actions = listOf(OpenUrl("", "https://noai.duckduckgo.com/&q=lorem ipsum"))),
-                    Entry(title = "Test Show Entries", actions = listOf(ShowEntries("", listOf(
-                        Entry(title = "1", actions = listOf(CopyText("", "1"))),
-                        Entry(title = "2", actions = listOf(CopyText("", "2"))),
-                        Entry(title = "3", actions = listOf(CopyText("", "3"))),
-                    )))),
+                    Entry(
+                        title = "Test Copy Image", actions = listOf(
+                            CopyImage(
+                                "",
+                                "/home/lighttigerxiv/Pictures/profile/tiger.jpg"
+                            )
+                        )
+                    ),
+                    Entry(
+                        title = "Test Open Url", actions = listOf(
+                            OpenUrl(
+                                "",
+                                "https://noai.duckduckgo.com/&q=lorem ipsum"
+                            )
+                        )
+                    ),
+                    Entry(
+                        title = "Test Show Entries", actions = listOf(
+                            ShowEntries(
+                                "", listOf(
+                                    Entry(title = "1", actions = listOf(CopyText("", "1"))),
+                                    Entry(title = "2", actions = listOf(CopyText("", "2"))),
+                                    Entry(title = "3", actions = listOf(CopyText("", "3"))),
+                                )
+                            )
+                        )
+                    ),
                 )
             )
         }
+
+        socketRepository.pluginResponse.onEach { entries ->
+            _state.update { it.copy(entries = entries, context = "Plugin") }
+        }.launchIn(CoroutineScope(IO))
+
+        windowRepository.showWindow.onEach { showWindow ->
+            _state.update { it.copy(focus = showWindow) }
+
+        }.launchIn(CoroutineScope(IO))
     }
 
     fun onIntent(intent: Intent) {
@@ -73,11 +112,16 @@ class MainScreenVM(
                 return@launch
             }
 
+            if (text.startsWith("t ")) {
+                socketRepository.sendToPlugin("core-testing", GetEntries(text))
+                return@launch
+            }
+
             val apps = appsRepository.apps
                 .filter { sniffer.matches(it.name, text) }
                 .map { it.asEntry() }
 
-            _state.update { it.copy(entries = apps, selectionIndex = 0) }
+            _state.update { it.copy(entries = apps, selectionIndex = 0, context = "Apps") }
         }
     }
 
@@ -133,12 +177,14 @@ class MainScreenVM(
                     windowRepository.hide()
                 }
             }
+
             is CopyText -> {
                 scope.launch {
                     ActionHandler.copyText(action.textCopy)
                     windowRepository.hide()
                 }
             }
+
             is OpenApp -> {
                 appsRepository.openApp(action.path)
                 windowRepository.hide()
@@ -150,6 +196,7 @@ class MainScreenVM(
                     windowRepository.hide()
                 }
             }
+
             is Plugin -> TODO()
             is ShowEntries -> {
                 scope.launch {

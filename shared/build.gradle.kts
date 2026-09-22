@@ -34,6 +34,8 @@ kotlin {
             implementation("com.github.Mono-Code-Scheme:scheme-kt:1.0.0")
 
             implementation("com.github.Whiskers-Apps:sniffer-kt:1.1.0")
+
+            implementation("org.whiskersapps:mordomo-core:0.2.0")
         }
 
         commonTest.dependencies {

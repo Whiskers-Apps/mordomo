@@ -1,9 +1,8 @@
 package org.whiskersapps.mordomo.core.features.apps
 
 import kotlinx.serialization.Serializable
-import org.whiskersapps.mordomo.core.features.actions.OpenApp
-import org.whiskersapps.mordomo.core.features.actions.OpenUrl
-import org.whiskersapps.mordomo.core.features.entries.Entry
+import lib.Entry
+import lib.OpenApp
 
 @Serializable
 data class App(

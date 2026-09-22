@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.whiskersapps.mordomo.core.features.icons.IconRepository
@@ -11,6 +12,12 @@ import org.whiskersapps.mordomo.core.features.indexing.getApplicationFiles
 import org.whiskersapps.mordomo.core.features.indexing.getCacheDir
 import java.io.File
 import kotlinx.serialization.json.Json
+import org.whiskersapps.mordomo.core.features.indexing.getApplicationDirs
+import java.nio.file.ClosedWatchServiceException
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds
+import java.nio.file.WatchKey
 import kotlin.concurrent.thread
 
 
@@ -25,6 +32,10 @@ class AppsRepository(
             index()
 
             iconRepository.iconsLoaded.collect { index() }
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            watchChanges()
         }
     }
 
@@ -42,7 +53,39 @@ class AppsRepository(
         }
     }
 
-    suspend fun index() = withContext(Dispatchers.IO) {
+    private suspend fun watchChanges() = withContext(Dispatchers.IO) {
+        val watchService = FileSystems.getDefault().newWatchService()
+        val watchedDirs = mutableMapOf<WatchKey, Path>()
+
+        for (dir in getApplicationDirs()) {
+            if (!dir.exists()) continue
+
+            val key = dir.toPath().register(
+                watchService,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_MODIFY,
+                StandardWatchEventKinds.ENTRY_DELETE
+            )
+
+            watchedDirs[key] = dir.toPath()
+        }
+
+        while (isActive) {
+            val key = try {
+                watchService.take()
+            } catch (e: Exception) {
+                println("Failed to watch changes. $e")
+                break
+            }
+
+            key.pollEvents()
+            key.reset()
+
+            index()
+        }
+    }
+
+    private suspend fun index() = withContext(Dispatchers.IO) {
         val files = getApplicationFiles()
         val newApps = ArrayList<App>()
 
@@ -111,8 +154,10 @@ class AppsRepository(
         thread {
             try {
                 ProcessBuilder("gtk-launch", name)
-                    .inheritIO()
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
                     .start()
+
             } catch (e: Exception) {
                 println("Failed to open app. $e")
             }
