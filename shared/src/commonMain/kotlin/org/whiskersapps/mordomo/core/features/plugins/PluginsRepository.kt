@@ -55,7 +55,7 @@ class PluginsRepository(
                             }
                         }
 
-                        if (!pluginSettings.containsKey("[keyword]")){
+                        if (!pluginSettings.containsKey("[keyword]")) {
                             pluginSettings["[keyword]"] = ""
                         }
 
@@ -89,27 +89,58 @@ class PluginsRepository(
         }
     }
 
+    // This function is very vibe coded xD
     private fun getJavaBin(): String {
         val javaHome = System.getProperty("java.home")
-        val bundledJava = File(javaHome, "bin/java")
-        if (bundledJava.exists() && bundledJava.canExecute()) {
-            return bundledJava.absolutePath
+        val userHome = System.getProperty("user.home")
+
+        if (!javaHome.isNullOrBlank()) {
+            val directJava = File(javaHome, "bin/java")
+            if (directJava.canExecute()) return directJava.absolutePath
         }
 
         val envJavaHome = System.getenv("JAVA_HOME")
         if (!envJavaHome.isNullOrBlank()) {
             val envJava = File(envJavaHome, "bin/java")
-            if (envJava.exists() && envJava.canExecute()) {
-                return envJava.absolutePath
+            if (envJava.canExecute()) return envJava.absolutePath
+        }
+
+        if (!userHome.isNullOrBlank()) {
+            val userPaths = listOf(
+                "$userHome/.sdkman/candidates/java/current/bin/java",
+                "$userHome/.local/bin/java",
+                "$userHome/bin/java",
+                "$userHome/.asdf/shims/java",
+                "$userHome/.local/share/mise/shims/java"
+            )
+            for (path in userPaths) {
+                val file = File(path)
+                if (file.canExecute()) return file.absolutePath
+            }
+
+            val jdksDir = File(userHome, ".jdks")
+            if (jdksDir.isDirectory) {
+                val ideaJava = jdksDir.listFiles()
+                    ?.map { File(it, "bin/java") }
+                    ?.firstOrNull { it.canExecute() }
+                if (ideaJava != null) return ideaJava.absolutePath
             }
         }
 
         val systemPaths = System.getenv("PATH")?.split(File.pathSeparator) ?: emptyList()
-        for (path in systemPaths) {
-            val pathJava = File(path, "java")
-            if (pathJava.exists() && pathJava.canExecute()) {
-                return pathJava.absolutePath
-            }
+        for (dir in systemPaths) {
+            val pathJava = File(dir, "java")
+            if (pathJava.canExecute()) return pathJava.absolutePath
+        }
+
+        val systemFallbacks = listOf(
+            "/usr/bin/java",
+            "/usr/lib/jvm/default/bin/java",
+            "/usr/lib/jvm/default-runtime/bin/java"
+        )
+        for (fallback in systemFallbacks) {
+            val f = File(fallback)
+            if (f.canExecute()) return f.absolutePath
         }
 
         return "java"
