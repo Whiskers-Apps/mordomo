@@ -18,14 +18,17 @@ import lib.CopyImage
 import lib.CopyText
 import lib.Entry
 import lib.GetEntries
+import lib.KeywordSplit
 import lib.OpenApp
 import lib.OpenUrl
 import lib.Plugin
 import lib.PluginMessage
+import lib.RunAction
 import lib.ShowEntries
 import org.whiskersapps.mordomo.core.features.actions.ActionHandler
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
 import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
+import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState
@@ -36,7 +39,8 @@ class MainScreenVM(
     val appsRepository: AppsRepository,
     val windowRepository: WindowRepository,
     val socketRepository: SocketRepository,
-    val pluginsRepository: PluginsRepository
+    val settingsRepository: SettingsRepository,
+    val pluginsRepository: PluginsRepository // Nao tirar para que os plugins sejam indexados
 ) {
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -83,9 +87,15 @@ class MainScreenVM(
                 return@launch
             }
 
-            if (text.startsWith("t ")) {
-                socketRepository.sendToPlugin("core-testing", GetEntries(text))
-                return@launch
+            val keywords = settingsRepository.pluginsKeywords
+
+            val split = KeywordSplit(text)
+
+            if (split.keyword != null) {
+                if (keywords.containsKey(split.keyword)) {
+                    socketRepository.sendToPlugin(keywords[split.keyword]!!, GetEntries(split.searchText ?: ""))
+                    return@launch
+                }
             }
 
             val apps = appsRepository.apps
@@ -168,7 +178,16 @@ class MainScreenVM(
                 }
             }
 
-            is Plugin -> TODO()
+            is Plugin -> {
+                scope.launch {
+                    socketRepository.sendToPlugin(
+                        action.pluginId,
+                        message = RunAction(action.action, info = action.customInfo),
+                    )
+
+                    windowRepository.hide()
+                }
+            }
             is ShowEntries -> {
                 scope.launch {
                     _state.update { it.copy(entries = action.entries) }

@@ -40,7 +40,7 @@ val appModule = module {
     single { SettingsRepository() }
     single { PluginsRepository(get()) }
 
-    single { MainScreenVM(get(), get(), get(), get()) }
+    single { MainScreenVM(get(), get(), get(), get(), get()) }
 }
 
 fun main() {

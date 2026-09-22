@@ -16,6 +16,9 @@ class SettingsRepository {
 
     val jsonConf = Json { prettyPrint = true; encodeDefaults = true }
 
+    /// Map<Keyword, PluginId>
+    val pluginsKeywords: MutableMap<String, String> = mutableMapOf()
+
     init {
         CoroutineScope(Dispatchers.IO).launch {
             val file = getConfigFile()
@@ -36,6 +39,8 @@ class SettingsRepository {
             try {
                 val fileSettings: Settings = jsonConf.decodeFromString(file.readText())
                 _settings.update { fileSettings }
+
+                assignKeywords()
             } catch (e: Exception) {
                 println("Failed to parse settings from file (Using default as a backup). $e")
                 _settings.update { Settings() }
@@ -51,5 +56,19 @@ class SettingsRepository {
     suspend fun update(settings: Settings) = withContext(Dispatchers.IO) {
         _settings.update { settings }
         getConfigFile().writeText(jsonConf.encodeToString(settings))
+
+        assignKeywords()
+    }
+
+    private fun assignKeywords(){
+        pluginsKeywords.clear()
+
+        val pluginsSettings = settings.value!!.pluginsSettings
+
+        for (pluginId in pluginsSettings.keys) {
+            val keyword = pluginsSettings[pluginId]?.get("[keyword]") ?: continue
+
+            pluginsKeywords[keyword] = pluginId
+        }
     }
 }
