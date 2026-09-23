@@ -3,6 +3,7 @@ package org.whiskersapps.mordomo.core.features.actions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.concurrent.thread
 
 class ActionHandler {
     companion object {
@@ -23,9 +24,12 @@ class ActionHandler {
             }
         }
 
-        suspend fun openUrl(url: String) {
-            withContext(Dispatchers.IO) {
-                ProcessBuilder("xdg-open", url).start()
+        fun openUrl(url: String) {
+            thread {
+                ProcessBuilder("xdg-open", url)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
+                    .start()
             }
         }
     }

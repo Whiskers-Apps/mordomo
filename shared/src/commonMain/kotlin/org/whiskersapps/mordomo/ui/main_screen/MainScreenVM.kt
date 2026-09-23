@@ -5,12 +5,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import lib.Action
@@ -22,12 +20,12 @@ import lib.KeywordSplit
 import lib.OpenApp
 import lib.OpenUrl
 import lib.Plugin
-import lib.PluginMessage
 import lib.RunAction
 import lib.ShowEntries
 import org.whiskersapps.mordomo.core.features.actions.ActionHandler
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
 import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
+import org.whiskersapps.mordomo.core.features.settings.SearchEngine
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
@@ -87,13 +85,39 @@ class MainScreenVM(
                 return@launch
             }
 
-            val keywords = settingsRepository.pluginsKeywords
-
             val split = KeywordSplit(text)
+            val settings = settingsRepository.settings.value!!
 
             if (split.keyword != null) {
-                if (keywords.containsKey(split.keyword)) {
-                    socketRepository.sendToPlugin(keywords[split.keyword]!!, GetEntries(split.searchText ?: ""))
+                val pluginsKeywords = settingsRepository.pluginsKeywords
+
+                if (pluginsKeywords.containsKey(split.keyword)) {
+                    socketRepository.sendToPlugin(pluginsKeywords[split.keyword]!!, GetEntries(split.searchText ?: ""))
+                    return@launch
+                }
+
+                val searchEngine: SearchEngine? = if( split.keyword == settings.searchKeyword && settings.defaultSearchEngine != null){
+                    settings.searchEngines.find { it.id == settings.defaultSearchEngine }
+                }else{
+                    settings.searchEngines.find { it.keyword == split.keyword }
+                }
+
+                if (searchEngine != null) {
+                    _state.update {
+                        it.copy(
+                            context = "Web Search",
+                            entries = listOf(
+                                Entry(
+                                    title = searchEngine.name,
+                                    description = "Search for ${split.searchText}",
+                                    actions = listOf(
+                                        OpenUrl(text = "", url = searchEngine.query.replace("%s", split.searchText ?: ""))
+                                    )
+                                )
+                            )
+                        )
+                    }
+
                     return@launch
                 }
             }
@@ -188,6 +212,7 @@ class MainScreenVM(
                     windowRepository.hide()
                 }
             }
+
             is ShowEntries -> {
                 scope.launch {
                     _state.update { it.copy(entries = action.entries) }

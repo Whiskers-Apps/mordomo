@@ -7,3 +7,7 @@ distributable:
 install: distributable
 	sudo cp -a "$(DIST_DIR)/." "$(DEST_DIR)/"
 	@echo "Installed to $(DEST_DIR)"
+
+kill:
+	killall java
+	rm /tmp/mordomo.port
