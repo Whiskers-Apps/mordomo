@@ -15,6 +15,7 @@ import lib.Action
 import lib.CopyImage
 import lib.CopyText
 import lib.Entry
+import lib.Form
 import lib.GetEntries
 import lib.KeywordSplit
 import lib.OpenApp
@@ -125,7 +126,7 @@ class MainScreenVM(
             val defaultEngine: SearchEngine? = settings.searchEngines.find { it.id == settings.defaultSearchEngine }
 
             if (defaultEngine != null) {
-                setEngineEntry(defaultEngine, split.searchText ?: "")
+                setEngineEntry(defaultEngine, text)
                 return@launch
             }
         }
@@ -217,6 +218,12 @@ class MainScreenVM(
             is ShowEntries -> {
                 scope.launch {
                     _state.update { it.copy(entries = action.entries) }
+                }
+            }
+
+            is Form -> {
+                scope.launch {
+                    windowRepository.goToForm(action)
                 }
             }
         }
