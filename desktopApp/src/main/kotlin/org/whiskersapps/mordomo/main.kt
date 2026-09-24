@@ -58,22 +58,22 @@ fun main() {
 
     application {
         val showWindow = windowRepository.showWindow.collectAsState().value
+        val settings = settingsRepository.settings.collectAsState().value
+        val route = windowRepository.route.collectAsState().value
 
-        val windowState = rememberWindowState(
-            position = WindowPosition(Alignment.Center),
-            size = DpSize(800.dp, 500.dp)
-        )
-
-        Window(
-            state = windowState,
-            onCloseRequest = { windowRepository.hide() },
-            title = "Mordomo",
-            undecorated = true,
-            alwaysOnTop = true,
-            resizable = false,
-            visible = showWindow
-        ) {
-            if (settingsRepository.settings.collectAsState().value != null) {
+        if (settings != null) {
+            Window(
+                state = rememberWindowState(
+                    position = WindowPosition(Alignment.Center),
+                    size = DpSize(800.dp, 500.dp)
+                ),
+                onCloseRequest = { windowRepository.hide() },
+                title = "Mordomo",
+                undecorated = true,
+                alwaysOnTop = true,
+                resizable = false,
+                visible = showWindow
+            ) {
                 LaunchedEffect(showWindow) {
                     if (showWindow) {
                         window.toFront()
@@ -81,7 +81,7 @@ fun main() {
                     }
                 }
 
-                when (windowRepository.route.collectAsState().value) {
+                when (route) {
                     Route.Main -> {
                         MainScreenRoot()
                     }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -180,7 +181,7 @@ fun MainScreen(
 
                                 painter?.let {
                                     Image(
-                                        modifier = Modifier.size(40.dp),
+                                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)),
                                         painter = painter,
                                         contentDescription = null,
                                     )

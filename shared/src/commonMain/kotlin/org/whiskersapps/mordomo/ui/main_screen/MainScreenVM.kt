@@ -29,6 +29,7 @@ import org.whiskersapps.mordomo.core.features.settings.SearchEngine
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
+import org.whiskersapps.mordomo.core.utils.getEngineFaviconPath
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenIntent as Intent
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState as State
@@ -38,7 +39,8 @@ class MainScreenVM(
     val windowRepository: WindowRepository,
     val socketRepository: SocketRepository,
     val settingsRepository: SettingsRepository,
-    val pluginsRepository: PluginsRepository // Nao tirar para que os plugins sejam indexados
+    // Do NOT remove. It's necessary to index the plugins
+    private val _pluginsRepository: PluginsRepository
 ) {
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
@@ -46,6 +48,7 @@ class MainScreenVM(
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val sniffer = Sniffer()
+
 
     init {
         _state.update {
@@ -55,12 +58,11 @@ class MainScreenVM(
         }
 
         socketRepository.pluginResponse.onEach { entries ->
-            _state.update { it.copy(entries = entries, context = "Plugin") }
+            _state.update { it.copy(entries = entries) }
         }.launchIn(CoroutineScope(IO))
 
         windowRepository.showWindow.onEach { showWindow ->
             _state.update { it.copy(focus = showWindow) }
-
         }.launchIn(CoroutineScope(IO))
     }
 
@@ -92,32 +94,21 @@ class MainScreenVM(
                 val pluginsKeywords = settingsRepository.pluginsKeywords
 
                 if (pluginsKeywords.containsKey(split.keyword)) {
-                    socketRepository.sendToPlugin(pluginsKeywords[split.keyword]!!, GetEntries(split.searchText ?: ""))
+                    val pluginId = pluginsKeywords[split.keyword]!!
+                    socketRepository.sendToPlugin(pluginId, GetEntries(split.searchText ?: ""))
+
                     return@launch
                 }
 
-                val searchEngine: SearchEngine? = if( split.keyword == settings.searchKeyword && settings.defaultSearchEngine != null){
-                    settings.searchEngines.find { it.id == settings.defaultSearchEngine }
-                }else{
-                    settings.searchEngines.find { it.keyword == split.keyword }
-                }
-
-                if (searchEngine != null) {
-                    _state.update {
-                        it.copy(
-                            context = "Web Search",
-                            entries = listOf(
-                                Entry(
-                                    title = searchEngine.name,
-                                    description = "Search for ${split.searchText}",
-                                    actions = listOf(
-                                        OpenUrl(text = "", url = searchEngine.query.replace("%s", split.searchText ?: ""))
-                                    )
-                                )
-                            )
-                        )
+                val searchEngine: SearchEngine? =
+                    if (split.keyword == settings.searchKeyword && settings.defaultSearchEngine != null) {
+                        settings.searchEngines.find { it.id == settings.defaultSearchEngine }
+                    } else {
+                        settings.searchEngines.find { it.keyword == split.keyword }
                     }
 
+                if (searchEngine != null) {
+                    setEngineEntry(searchEngine, split.searchText ?: "")
                     return@launch
                 }
             }
@@ -126,7 +117,17 @@ class MainScreenVM(
                 .filter { sniffer.matches(it.name, text) }
                 .map { it.asEntry() }
 
-            _state.update { it.copy(entries = apps, selectionIndex = 0, context = "Apps") }
+            if (apps.isNotEmpty()) {
+                _state.update { it.copy(entries = apps, selectionIndex = 0, context = "Apps") }
+                return@launch
+            }
+
+            val defaultEngine: SearchEngine? = settings.searchEngines.find { it.id == settings.defaultSearchEngine }
+
+            if (defaultEngine != null) {
+                setEngineEntry(defaultEngine, split.searchText ?: "")
+                return@launch
+            }
         }
     }
 
@@ -225,5 +226,24 @@ class MainScreenVM(
 
     private fun onSettingsShortcutClick() {
         scope.launch { windowRepository.goToSettings() }
+    }
+
+    // ----------------------------------------------------------------------------------------------------------- //
+    private fun setEngineEntry(engine: SearchEngine, searchText: String) {
+        _state.update {
+            it.copy(
+                context = "Web Search",
+                entries = listOf(
+                    Entry(
+                        image = getEngineFaviconPath(engine.id),
+                        title = engine.name,
+                        description = "Search for $searchText",
+                        actions = listOf(
+                            OpenUrl(text = "", url = engine.query.replace("%s", searchText))
+                        )
+                    )
+                )
+            )
+        }
     }
 }

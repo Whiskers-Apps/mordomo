@@ -17,19 +17,19 @@ data class Settings(
             keyword = "!d"
         ),
         SearchEngine(
-            id = 1,
+            id = 2,
             name = "Google",
             query = "https://www.google.com/search?q=%s",
             keyword = "!g"
         ),
         SearchEngine(
-            id = 1,
+            id = 3,
             name = "Ecosia",
             query = "https://www.ecosia.org/search?q=%s",
             keyword = "!e"
         ),
         SearchEngine(
-            id = 1,
+            id = 4,
             name = "Startpage",
             query = "https://www.startpage.com/sp/search?query=%s",
             keyword = "!s"

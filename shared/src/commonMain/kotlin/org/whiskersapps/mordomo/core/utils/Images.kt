@@ -28,3 +28,13 @@ fun getImageFromPath(path: String, density: Density): Painter? {
         null
     }
 }
+
+fun getFaviconURL(url: String): String {
+    return "https://favicon.is/${url.removePrefix("https://").removePrefix("http://").replace("%s", "")}"
+}
+
+fun getEngineFaviconPath(id: Int): String {
+    val iconsCacheDir = File(System.getProperty("user.home"), ".cache/mordomo/favicons").apply { mkdirs() }
+    val iconPath = File(iconsCacheDir, "${id}.png")
+    return iconPath.absolutePath
+}
