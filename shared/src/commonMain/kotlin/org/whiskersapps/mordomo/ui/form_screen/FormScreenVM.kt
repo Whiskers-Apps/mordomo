@@ -32,7 +32,7 @@ class FormScreenVM(
     private val socketRepository: SocketRepository,
     private val windowRepository: WindowRepository
 ) {
-    private val _state = MutableStateFlow(State())
+    private val _state = MutableStateFlow(FormScreenState())
     val state = _state.asStateFlow()
 
     private val scope = CoroutineScope(IO)

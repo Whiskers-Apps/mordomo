@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -31,9 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,15 +59,12 @@ import lib.SelectOption
 import lib.TextInput
 import mordomo.shared.generated.resources.Res
 import mordomo.shared.generated.resources.arrow_left
-import mordomo.shared.generated.resources.base_icon
 import mordomo.shared.generated.resources.chevron_down
 import mordomo.shared.generated.resources.file
 import mordomo.shared.generated.resources.folder
 import mordomo.shared.generated.resources.trash
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.getKoin
 import org.koin.compose.koinInject
-import org.koin.core.parameter.parametersOf
 import org.whiskersapps.mordomo.ui.form_screen.FormScreenIntent as Intent
 
 @Composable
@@ -85,7 +79,7 @@ fun FormScreenRoot(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormScreen(
-    state: State,
+    state: FormScreenState,
     onIntent: (Intent) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -347,9 +341,8 @@ fun InputHeader(title: String, description: String) {
 @Preview
 fun FormScreenPreview() {
     FormScreen(
-        State(
+        FormScreenState(
             form = Form(
-                text = "",
                 pluginId = "",
                 title = "A Random Form",
                 buttonText = "Fill",

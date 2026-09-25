@@ -1,11 +1,9 @@
 package org.whiskersapps.mordomo.ui.form_screen
 
 import lib.Form
-import lib.FormInput
 
-data class State(
+data class FormScreenState(
     val form: Form = Form(
-        text = "",
         pluginId = "",
         title = "",
         buttonText = "",

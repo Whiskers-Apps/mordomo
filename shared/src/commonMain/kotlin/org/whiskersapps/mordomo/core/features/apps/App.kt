@@ -17,9 +17,7 @@ data class App(
             image = this.iconPath,
             title = this.name,
             description = this.description ?: "Application",
-            actions = listOf(
-                OpenApp("", this.path),
-            )
+            action = OpenApp(this.path)
         )
     }
 }

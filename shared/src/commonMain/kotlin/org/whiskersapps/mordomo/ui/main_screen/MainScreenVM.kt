@@ -68,7 +68,8 @@ class MainScreenVM(
             _state.update { it.copy(focusWindow = showWindow) }
         }.launchIn(CoroutineScope(IO))
 
-        windowRepository.focusTrigger.onEach {_state.update { it.copy(refocusTrigger = it.refocusTrigger + 1) } }.launchIn(CoroutineScope(IO))
+        windowRepository.focusTrigger.onEach { _state.update { it.copy(refocusTrigger = it.refocusTrigger + 1) } }
+            .launchIn(CoroutineScope(IO))
     }
 
     fun onIntent(intent: Intent) {
@@ -168,15 +169,8 @@ class MainScreenVM(
 
     private fun onEnterClick() {
         scope.launch {
-            val actions = state.value.entries[state.value.selectionIndex].actions
-
-            if (actions.isEmpty())
-                return@launch
-
-            if (actions.size == 1) {
-                handleAction(actions[0])
-            }
-            // Mostrar menu com mais opcoes
+            val action = state.value.entries[state.value.selectionIndex].action ?: return@launch
+            handleAction(action)
         }
     }
 
@@ -185,6 +179,7 @@ class MainScreenVM(
             is CopyImage -> {
                 scope.launch {
                     ActionHandler.copyImage(action.path)
+                    _state.update { MainScreenState() }
                     windowRepository.hide()
                 }
             }
@@ -192,18 +187,21 @@ class MainScreenVM(
             is CopyText -> {
                 scope.launch {
                     ActionHandler.copyText(action.textCopy)
+                    _state.update { MainScreenState() }
                     windowRepository.hide()
                 }
             }
 
             is OpenApp -> {
                 appsRepository.openApp(action.path)
+                _state.update { MainScreenState() }
                 windowRepository.hide()
             }
 
             is OpenUrl -> {
                 scope.launch {
                     ActionHandler.openUrl(action.url)
+                    _state.update { MainScreenState() }
                     windowRepository.hide()
                 }
             }
@@ -215,6 +213,7 @@ class MainScreenVM(
                         message = RunAction(action.action, customInfo = action.customInfo),
                     )
 
+                    _state.update { MainScreenState() }
                     windowRepository.hide()
                 }
             }
@@ -228,12 +227,12 @@ class MainScreenVM(
             is Form -> {
                 scope.launch {
                     formRepository.setForm(action)
+                    _state.update { MainScreenState() }
                     windowRepository.goToForm()
                 }
             }
         }
 
-        _state.update { MainScreenState() }
     }
 
     private fun onSettingsShortcutClick() {
@@ -250,9 +249,7 @@ class MainScreenVM(
                         image = getEngineFaviconPath(engine.id),
                         title = engine.name,
                         description = "Search for $searchText",
-                        actions = listOf(
-                            OpenUrl(text = "", url = engine.query.replace("%s", searchText))
-                        )
+                        action = OpenUrl(url = engine.query.replace("%s", searchText))
                     )
                 )
             )

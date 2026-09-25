@@ -6,6 +6,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -43,7 +44,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import lib.CopyImage
+import lib.CopyText
 import lib.Entry
+import lib.Form
+import lib.OpenApp
+import lib.OpenUrl
+import lib.Plugin
+import lib.ShowEntries
 import mordomo.shared.generated.resources.Res
 import mordomo.shared.generated.resources.base_icon
 import org.jetbrains.compose.resources.painterResource
@@ -74,6 +82,7 @@ fun MainScreen(
         val density = LocalDensity.current
         val windowInfo = LocalWindowInfo.current
         val scope = rememberCoroutineScope()
+        var showConfirmWarning by remember { mutableStateOf(false) }
 
         // This is not the most performant but NOTHING works so yolo. It focus when opening the window
         if (state.focusWindow && windowInfo.isWindowFocused) {
@@ -111,26 +120,52 @@ fun MainScreen(
                     when (event.key) {
                         Key.Escape if event.type == KeyEventType.KeyDown -> {
                             onIntent(Intent.CloseWindow)
+                            showConfirmWarning = false
                             true
                         }
 
                         Key.DirectionDown if event.type == KeyEventType.KeyDown -> {
                             onIntent(Intent.ArrowDownClick)
+                            showConfirmWarning = false
                             true
                         }
 
                         Key.DirectionUp if event.type == KeyEventType.KeyDown -> {
                             onIntent(Intent.ArrowUpClick)
+                            showConfirmWarning = false
                             true
                         }
 
                         Key.Enter if event.type == KeyEventType.KeyDown -> {
-                            onIntent(Intent.EnterClick)
+                            val action = state.entries[state.selectionIndex].action ?: return@onPreviewKeyEvent true
+
+                            val confirm = when (action) {
+                                is CopyImage -> action.confirm
+                                is CopyText -> action.confirm
+                                is Form -> action.confirm
+                                is OpenApp -> action.confirm
+                                is OpenUrl -> action.confirm
+                                is Plugin -> action.confirm
+                                is ShowEntries -> action.confirm
+                            }
+
+                            if (confirm) {
+                                if (showConfirmWarning) {
+                                    showConfirmWarning = false
+                                    onIntent(Intent.EnterClick)
+                                } else {
+                                    showConfirmWarning = true
+                                }
+                            } else {
+                                onIntent(Intent.EnterClick)
+                            }
+
                             true
                         }
 
                         Key.S if event.type == KeyEventType.KeyDown && event.isCtrlPressed -> {
                             onIntent(Intent.SettingsShortcutClick)
+                            showConfirmWarning = false
                             true
                         }
 
@@ -197,7 +232,10 @@ fun MainScreen(
                             }
 
 
-                            Column {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().weight(1f),
+                                verticalArrangement = Arrangement.Center
+                            ) {
                                 Text(
                                     text = entry.title,
                                     fontSize = 14.sp,
@@ -209,6 +247,20 @@ fun MainScreen(
                                         text = description,
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+
+                            if (showConfirmWarning && index == state.selectionIndex) {
+                                Box(
+                                    modifier = Modifier.height(IntrinsicSize.Max)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.error)
+                                        .padding(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Confirm",
+                                        color = MaterialTheme.colorScheme.onError,
                                     )
                                 }
                             }
