@@ -9,5 +9,8 @@ install: distributable
 	@echo "Installed to $(DEST_DIR)"
 
 kill:
-	killall java
-	rm /tmp/mordomo.port
+	killall java || true
+	rm /tmp/mordomo.port || true
+
+reload:	kill
+	./gradlew desktopApp:run

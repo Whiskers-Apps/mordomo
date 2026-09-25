@@ -25,6 +25,7 @@ import lib.RunAction
 import lib.ShowEntries
 import org.whiskersapps.mordomo.core.features.actions.ActionHandler
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
+import org.whiskersapps.mordomo.core.features.form.FormRepository
 import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
 import org.whiskersapps.mordomo.core.features.settings.SearchEngine
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
@@ -40,6 +41,7 @@ class MainScreenVM(
     val windowRepository: WindowRepository,
     val socketRepository: SocketRepository,
     val settingsRepository: SettingsRepository,
+    val formRepository: FormRepository,
     // Do NOT remove. It's necessary to index the plugins
     private val _pluginsRepository: PluginsRepository
 ) {
@@ -59,12 +61,14 @@ class MainScreenVM(
         }
 
         socketRepository.pluginResponse.onEach { entries ->
-            _state.update { it.copy(entries = entries) }
+            _state.update { it.copy(entries = entries, context = "Plugin") }
         }.launchIn(CoroutineScope(IO))
 
         windowRepository.showWindow.onEach { showWindow ->
-            _state.update { it.copy(focus = showWindow) }
+            _state.update { it.copy(focusWindow = showWindow) }
         }.launchIn(CoroutineScope(IO))
+
+        windowRepository.focusTrigger.onEach {_state.update { it.copy(refocusTrigger = it.refocusTrigger + 1) } }.launchIn(CoroutineScope(IO))
     }
 
     fun onIntent(intent: Intent) {
@@ -208,7 +212,7 @@ class MainScreenVM(
                 scope.launch {
                     socketRepository.sendToPlugin(
                         action.pluginId,
-                        message = RunAction(action.action, info = action.customInfo),
+                        message = RunAction(action.action, customInfo = action.customInfo),
                     )
 
                     windowRepository.hide()
@@ -223,7 +227,8 @@ class MainScreenVM(
 
             is Form -> {
                 scope.launch {
-                    windowRepository.goToForm(action)
+                    formRepository.setForm(action)
+                    windowRepository.goToForm()
                 }
             }
         }

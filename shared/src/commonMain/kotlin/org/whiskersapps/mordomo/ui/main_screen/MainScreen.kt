@@ -18,10 +18,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -40,12 +38,10 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import lib.Entry
 import mordomo.shared.generated.resources.Res
@@ -79,9 +75,16 @@ fun MainScreen(
         val windowInfo = LocalWindowInfo.current
         val scope = rememberCoroutineScope()
 
-        // This is not the most performant but NOTHING works so yolo
-        if (state.focus && windowInfo.isWindowFocused) {
+        // This is not the most performant but NOTHING works so yolo. It focus when opening the window
+        if (state.focusWindow && windowInfo.isWindowFocused) {
             scope.launch { searchFocusRequester.requestFocus() }
+        }
+
+        // This refocus when coming from other screens
+        LaunchedEffect(state.refocusTrigger) {
+            scope.launch {
+                searchFocusRequester.requestFocus()
+            }
         }
 
         LaunchedEffect(state.selectionIndex) {
@@ -126,7 +129,7 @@ fun MainScreen(
                             true
                         }
 
-                        Key.S if event.type == KeyEventType.KeyDown && event.isCtrlPressed-> {
+                        Key.S if event.type == KeyEventType.KeyDown && event.isCtrlPressed -> {
                             onIntent(Intent.SettingsShortcutClick)
                             true
                         }
@@ -141,7 +144,10 @@ fun MainScreen(
                 Modifier.fillMaxHeight()
                     .weight(1f)
             ) {
-                Box(Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp),contentAlignment = Alignment.CenterStart) {
+                Box(
+                    Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
                     BasicTextField(
                         modifier = Modifier.focusRequester(searchFocusRequester),
                         value = state.searchText,

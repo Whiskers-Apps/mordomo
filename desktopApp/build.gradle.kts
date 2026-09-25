@@ -17,6 +17,8 @@ dependencies {
 
     implementation(project(":shared"))
 
+    implementation("org.whiskersapps:mordomo-core:0.2.0")
+
     implementation("io.insert-koin:koin-core:4.2.1")
 
 

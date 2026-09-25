@@ -8,7 +8,7 @@ data class Settings(
     /// Map<PluginId, Map<SettingId, Value>>
     val pluginsSettings: Map<String, Map<String, String>> = emptyMap(),
     val searchKeyword: String? = "s",
-    val defaultSearchEngine: Int? = null,
+    val defaultSearchEngine: Int? = 1,
     val searchEngines: List<SearchEngine> = listOf(
         SearchEngine(
             id = 1,
