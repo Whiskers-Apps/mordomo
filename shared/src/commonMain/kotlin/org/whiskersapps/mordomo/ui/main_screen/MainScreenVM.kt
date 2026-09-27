@@ -149,8 +149,10 @@ class MainScreenVM(
         scope.launch {
             val newIndex = state.value.selectionIndex + 1
 
-            if (newIndex >= state.value.entries.size)
+            if (newIndex >= state.value.entries.size) {
+                _state.update { it.copy(selectionIndex = 0) }
                 return@launch
+            }
 
             _state.update { it.copy(selectionIndex = newIndex) }
         }
@@ -160,8 +162,10 @@ class MainScreenVM(
         scope.launch {
             val newIndex = state.value.selectionIndex - 1
 
-            if (newIndex < 0)
+            if (newIndex < 0){
+                _state.update { it.copy(selectionIndex = state.value.entries.size - 1) }
                 return@launch
+            }
 
             _state.update { it.copy(selectionIndex = newIndex) }
         }
