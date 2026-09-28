@@ -2,14 +2,17 @@ package org.whiskersapps.mordomo.core.features.icons
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.whiskersapps.mordomo.core.features.indexing.getCacheDir
 import java.io.File
 import java.nio.file.Files
+import kotlin.io.path.absolutePathString
 
 val IMAGE_FORMATS = setOf(
     "apng", "png", "avif", "gif", "jpg", "jpeg", "jfif", "pjpeg", "pjp", "svg", "svgz", "webp",
@@ -17,25 +20,24 @@ val IMAGE_FORMATS = setOf(
 )
 
 class IconRepository {
-    private var icons = mutableMapOf<String, File>()
-    var iconPackPath: File? = null
-    var backupDirs: List<File> = emptyList()
+    private var icons = mutableMapOf<String, String>()
+    private var iconPackPath: File? = null
+    private var backupDirs: List<File> = emptyList()
 
-    private val _iconsLoaded = MutableSharedFlow<Unit>()
-    val iconsLoaded = _iconsLoaded.asSharedFlow()
+    private val _iconsLoaded = Channel<Unit>()
+    val iconsLoaded = _iconsLoaded.receiveAsFlow()
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            val iconPack = getSystemIconPack()
-            iconPackPath = getIconPackPath(iconPack)
-            backupDirs = fetchBackupDirs()
+            iconPackPath = getIconPackPath(getSystemIconPack())
+            backupDirs = getBackupDirs()
 
-            loadIconsFromCache()
-            fetchIcons()
+            loadFromCache()
+            indexIcons()
         }
     }
 
-    suspend fun loadIconsFromCache() = withContext(Dispatchers.IO){
+    private suspend fun loadFromCache() = withContext(Dispatchers.IO) {
         val file = File(getCacheDir(), "icons.json")
 
         if (!file.exists())
@@ -43,11 +45,9 @@ class IconRepository {
 
         try {
             val iconsJson = file.readText()
-            val decodedPaths: Map<String, String> = Json.decodeFromString(iconsJson)
-            icons = decodedPaths.mapValues { File(it.value) } as MutableMap<String, File>
+            icons = Json.decodeFromString(iconsJson)
 
-            _iconsLoaded.emit(Unit)
-
+            _iconsLoaded.send(Unit)
         } catch (e: Exception) {
             println("Failed to read icons cache. $e")
         }
@@ -107,7 +107,7 @@ class IconRepository {
         }
     }
 
-    private fun fetchBackupDirs(): List<File> {
+    private fun getBackupDirs(): List<File> {
         val home = System.getProperty("user.home")
 
         val localHicolor = File(home, ".local/share/icons/hicolor")
@@ -129,42 +129,41 @@ class IconRepository {
         return dirs
     }
 
-    private fun fetchIcons() {
+    private suspend fun indexIcons() = withContext(Dispatchers.IO) {
         val dirs = mutableListOf<File>()
 
-        iconPackPath?.let { dirs.add(it) }
+        if (iconPackPath != null)
+            dirs.add(iconPackPath!!)
+
         dirs.addAll(backupDirs)
         dirs.add(File("/usr/share/icons"))
+        dirs.add(File(System.getProperty("user.home"), ".local/share/icons"))
 
-        val home = System.getProperty("user.home")
-        dirs.add(File(home, ".local/share/icons"))
+        for (dirPath in dirs) {
+            if (!dirPath.exists() || !dirPath.isDirectory)
+                continue
 
-        for (dir in dirs) {
-            if (!dir.exists() || !dir.isDirectory) continue
-
-            dir.walkTopDown()
+            dirPath.walkTopDown()
                 .onEnter { true }
                 .filter { it.isFile }
                 .forEach { file ->
-                    val ext = file.extension.lowercase()
-                    if (ext in IMAGE_FORMATS) {
-                        val stem = file.nameWithoutExtension
-                        icons.putIfAbsent(stem, file)
+                    if (file.extension.lowercase() in IMAGE_FORMATS) {
+                        icons.putIfAbsent(file.nameWithoutExtension, file.absolutePath)
                     }
                 }
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val iconsJson = Json.encodeToString(icons.mapValues { it.value.path })
+        launch {
+            val iconsJson = Json.encodeToString(icons)
             File(getCacheDir(), "icons.json").apply { writeText(iconsJson) }
 
-            _iconsLoaded.emit(Unit)
+            _iconsLoaded.send(Unit)
         }
     }
 
-    private fun getTargetPath(path: File): File? {
+    private fun getTargetPath(path: File): String? {
         if (!Files.isSymbolicLink(path.toPath())) {
-            return path
+            return path.absolutePath
         }
 
         val link = try {
@@ -175,19 +174,18 @@ class IconRepository {
 
         return if (!link.isAbsolute) {
             val parent = path.parentFile ?: return null
-            parent.toPath().resolve(link).toRealPath().toFile()
+            parent.toPath().resolve(link).toRealPath().absolutePathString()
         } else {
-            link.toRealPath().toFile()
+            link.toRealPath().absolutePathString()
         }
     }
 
-    fun getIconPath(iconName: String): File? {
+    fun getIconPath(iconName: String): String? {
         val direct = File(iconName)
-        if (direct.exists()) return direct
+        if (direct.exists()) return direct.absolutePath
 
         val found = icons[iconName] ?: return null
 
-        return getTargetPath(found)
+        return getTargetPath(File(found))
     }
-
 }

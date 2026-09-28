@@ -2,8 +2,6 @@ package org.whiskersapps.mordomo.core.features.apps
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -13,7 +11,6 @@ import org.whiskersapps.mordomo.core.features.indexing.getCacheDir
 import java.io.File
 import kotlinx.serialization.json.Json
 import org.whiskersapps.mordomo.core.features.indexing.getApplicationDirs
-import java.nio.file.ClosedWatchServiceException
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds
@@ -22,24 +19,28 @@ import kotlin.concurrent.thread
 
 
 class AppsRepository(
-    val iconRepository: IconRepository
+    private val iconRepository: IconRepository
 ) {
     var apps = emptyList<App>()
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            loadAppsFromCache()
-            index()
+            loadFromCache()
 
-            iconRepository.iconsLoaded.collect { index() }
-        }
+            if (apps.isEmpty())
+                index()
 
-        CoroutineScope(Dispatchers.IO).launch {
-            watchChanges()
+            launch {
+                listenToChanges()
+            }
+
+            launch {
+                iconRepository.iconsLoaded.collect { index() }
+            }
         }
     }
 
-    fun loadAppsFromCache() {
+    fun loadFromCache() {
         val file = File(getCacheDir(), "apps.json")
 
         if (!file.exists())
@@ -53,7 +54,7 @@ class AppsRepository(
         }
     }
 
-    private suspend fun watchChanges() = withContext(Dispatchers.IO) {
+    private suspend fun listenToChanges() = withContext(Dispatchers.IO) {
         val watchService = FileSystems.getDefault().newWatchService()
         val watchedDirs = mutableMapOf<WatchKey, Path>()
 
@@ -134,7 +135,7 @@ class AppsRepository(
                     description = fields["Comment"],
                     keywords = fields["Keywords"]?.split(";") ?: emptyList(),
                     path = file.path,
-                    iconPath = if (fields["Icon"] != null) iconRepository.getIconPath(fields["Icon"]!!)?.path else null
+                    iconPath = if (fields["Icon"] != null) iconRepository.getIconPath(fields["Icon"]!!) else null
                 )
             )
         }
