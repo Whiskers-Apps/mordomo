@@ -129,7 +129,7 @@ class IconRepository {
         return dirs
     }
 
-    private suspend fun indexIcons() = withContext(Dispatchers.IO) {
+    suspend fun indexIcons() = withContext(Dispatchers.IO) {
         val dirs = mutableListOf<File>()
 
         if (iconPackPath != null)

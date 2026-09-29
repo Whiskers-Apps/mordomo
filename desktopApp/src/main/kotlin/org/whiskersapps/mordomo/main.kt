@@ -35,6 +35,10 @@ import org.whiskersapps.mordomo.core.features.window.Route
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
 import org.whiskersapps.mordomo.ui.form_screen.FormScreenRoot
 import org.whiskersapps.mordomo.ui.form_screen.FormScreenVM
+import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenRoot
+import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenVM
+import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabVM
+import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabVM
 
 val appModule = module {
     single { SocketRepository(get()) }
@@ -48,6 +52,10 @@ val appModule = module {
 
     single { MainScreenVM(get(), get(), get(), get(), get(), get()) }
     single { FormScreenVM(get(), get(), get()) }
+
+    factory { SettingsScreenVM(get()) }
+    factory { AboutTabVM() }
+    factory { PluginsTabVM(get(), get()) }
 }
 
 fun main() {
@@ -100,7 +108,7 @@ fun main() {
                     }
 
                     Route.Settings -> {
-
+                        SettingsScreenRoot()
                     }
                 }
             }

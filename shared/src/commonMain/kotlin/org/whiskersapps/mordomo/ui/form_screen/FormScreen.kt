@@ -111,7 +111,7 @@ fun FormScreen(
                     .padding(8.dp)
             ) {
                 Icon(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(16.dp),
                     painter = painterResource(Res.drawable.arrow_left),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onBackground,
