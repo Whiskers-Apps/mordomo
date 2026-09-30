@@ -1,8 +1,13 @@
 package org.whiskersapps.mordomo.core.features.plugins
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import lib.CheckSetting
 import lib.NumberSetting
@@ -20,73 +25,82 @@ class PluginsRepository(
         val PLUGINS_DIR = File(System.getProperty("user.home"), ".local/share/mordomo/plugins")
     }
 
-    val manifests = ArrayList<PluginManifest>()
+    private val _manifests = MutableStateFlow<List<PluginManifest>>(emptyList())
+    val manifests = _manifests.asStateFlow()
 
     init {
         CoroutineScope(IO).launch {
-            PLUGINS_DIR.walkTopDown()
-                .filter { it.isFile && it.name == "manifest.json" }
-                .forEach { file ->
-                    try {
-                        val jsonContent = file.readText()
-                        val manifest: PluginManifest = Json.decodeFromString(jsonContent)
-
-                        var pluginSettings: MutableMap<String, String> =
-                            settingsRepository.settings.value!!.pluginsSettings[manifest.id]?.toMutableMap()
-                                ?: emptyMap<String, String>().toMutableMap()
-
-                        for (setting in manifest.settings) {
-                            val id = when (setting) {
-                                is CheckSetting -> setting.id
-                                is NumberSetting -> setting.id
-                                is SelectSetting -> setting.id
-                                is TextSetting -> setting.id
-                            }
-
-                            if (!pluginSettings.containsKey(id)) {
-                                val value = when (setting) {
-                                    is CheckSetting -> setting.value.toString()
-                                    is NumberSetting -> setting.value.toString()
-                                    is SelectSetting -> setting.defaultOptionId
-                                    is TextSetting -> setting.value
-                                }
-
-                                pluginSettings[id] = value
-                            }
-                        }
-
-                        if (!pluginSettings.containsKey("[keyword]")) {
-                            pluginSettings["[keyword]"] = ""
-                        }
-
-                        val currentSettings = settingsRepository.settings.value!!
-                        val updatedPluginsSettings = currentSettings.pluginsSettings + (manifest.id to pluginSettings)
-                        val newSettings = currentSettings.copy(pluginsSettings = updatedPluginsSettings)
-
-                        settingsRepository.update(newSettings)
-
-                        manifests.add(manifest)
-
-                        val pluginFile = File(file.parent, "plugin.jar")
-
-                        if (!pluginFile.exists()) {
-                            println("Binary for [${manifest.id}] not found")
-                            return@forEach
-                        }
-
-                        pluginFile.setExecutable(true)
-
-                        launch(IO) {
-                            println("Executing [${manifest.id}]")
-
-                            ProcessBuilder(getJavaBin(), "-jar", pluginFile.path)
-                                .start()
-                        }
-                    } catch (_: Exception) {
-                        println("Failed to decode manifest. [${file.path}]")
-                    }
-                }
+            index()
         }
+    }
+
+    suspend fun index() = withContext(IO) {
+        val newManifests = mutableListOf<PluginManifest>()
+
+        PLUGINS_DIR.walkTopDown()
+            .filter { it.isFile && it.name == "manifest.json" }
+            .forEach { file ->
+                try {
+                    val jsonContent = file.readText()
+                    val manifest: PluginManifest = Json.decodeFromString(jsonContent)
+
+                    var pluginSettings: MutableMap<String, String> =
+                        settingsRepository.settings.value!!.pluginsSettings[manifest.id]?.toMutableMap()
+                            ?: emptyMap<String, String>().toMutableMap()
+
+                    for (setting in manifest.settings) {
+                        val id = when (setting) {
+                            is CheckSetting -> setting.id
+                            is NumberSetting -> setting.id
+                            is SelectSetting -> setting.id
+                            is TextSetting -> setting.id
+                        }
+
+                        if (!pluginSettings.containsKey(id)) {
+                            val value = when (setting) {
+                                is CheckSetting -> setting.value.toString()
+                                is NumberSetting -> setting.value.toString()
+                                is SelectSetting -> setting.defaultOptionId
+                                is TextSetting -> setting.value
+                            }
+
+                            pluginSettings[id] = value
+                        }
+                    }
+
+                    if (!pluginSettings.containsKey("[keyword]")) {
+                        pluginSettings["[keyword]"] = ""
+                    }
+
+                    val currentSettings = settingsRepository.settings.value!!
+                    val updatedPluginsSettings = currentSettings.pluginsSettings + (manifest.id to pluginSettings)
+                    val newSettings = currentSettings.copy(pluginsSettings = updatedPluginsSettings)
+
+                    settingsRepository.update(newSettings)
+
+                    newManifests.add(manifest)
+
+                    val pluginFile = File(file.parent, "plugin.jar")
+
+                    if (!pluginFile.exists()) {
+                        println("Binary for [${manifest.id}] not found")
+                        return@forEach
+                    }
+
+                    pluginFile.setExecutable(true)
+
+                    launch(IO) {
+                        println("Executing [${manifest.id}]")
+
+                        ProcessBuilder(getJavaBin(), "-jar", pluginFile.path)
+                            .start()
+                    }
+                } catch (_: Exception) {
+                    println("Failed to decode manifest. [${file.path}]")
+                }
+            }
+
+        _manifests.update { newManifests }
     }
 
     // This function is very vibe coded xD

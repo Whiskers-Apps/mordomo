@@ -41,6 +41,7 @@ import org.koin.compose.koinInject
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTab
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTab
+import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabRoot
@@ -148,7 +149,7 @@ fun SettingsScreen(
                 }
 
                 SettingsTab.Dev -> {
-                    DevTab()
+                    DevTabRoot()
                 }
             }
         }

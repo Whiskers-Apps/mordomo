@@ -24,16 +24,25 @@ class PluginsTabVM(
     val state = _state.asStateFlow()
 
     init {
+        load()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            pluginsRepository.manifests.collect { load() }
+        }
+    }
+
+    fun load() {
         val settings = settingsRepository.settings.value!!.pluginsSettings
         val pluginsValues: MutableMap<String, Map<String, String>> = mutableMapOf()
+        val manifests = pluginsRepository.manifests.value
 
-        for ((id) in pluginsRepository.manifests) {
+        for ((id) in manifests) {
             pluginsValues[id] = settings[id] ?: emptyMap()
         }
 
         _state.update {
             State(
-                manifests = pluginsRepository.manifests,
+                manifests = manifests,
                 values = pluginsValues
             )
         }

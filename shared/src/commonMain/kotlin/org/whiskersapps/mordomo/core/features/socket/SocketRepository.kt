@@ -61,7 +61,7 @@ class SocketRepository(val windowRepository: WindowRepository) {
     }
 
 
-    private val socketJob = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
+    val socketJob = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
         val server = ServerSocket(0)
         val port = server.localPort
 
@@ -116,6 +116,8 @@ class SocketRepository(val windowRepository: WindowRepository) {
     }
 
     suspend fun killSocket() = withContext(Dispatchers.IO) {
+        clients.values.forEach { it.println("kill") }
+
         socketJob.cancel()
         SOCKET_FILE.delete()
     }
