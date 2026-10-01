@@ -3,11 +3,13 @@ package org.whiskersapps.mordomo.core.features.socket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import lib.Action
 import lib.Entry
 import lib.PluginMessage
@@ -31,13 +33,16 @@ class SocketRepository(val windowRepository: WindowRepository) {
     private val _pluginResponse = Channel<List<Entry>>()
     val pluginResponse = _pluginResponse.consumeAsFlow()
 
+    private var serverSocket: ServerSocket? = null
+
+    private var socketJob: Job? = null
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
             val loaded = loadFromFile()
 
             if (!loaded)
-                socketJob.start()
+                createSocket()
         }
     }
 
@@ -60,54 +65,55 @@ class SocketRepository(val windowRepository: WindowRepository) {
         }
     }
 
+    fun createSocket() {
+        socketJob = CoroutineScope(Dispatchers.IO).launch {
+            serverSocket = ServerSocket(0)
+            val port = serverSocket!!.localPort
 
-    val socketJob = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
-        val server = ServerSocket(0)
-        val port = server.localPort
+            SOCKET_FILE.writeText(port.toString())
 
-        SOCKET_FILE.writeText(port.toString())
+            windowRepository.show()
 
-        windowRepository.show()
+            try {
+                while (true) {
+                    val client = serverSocket!!.accept()
 
-        try {
-            while (true) {
-                val client = server.accept()
+                    launch(Dispatchers.IO) {
+                        val receiver = BufferedReader(InputStreamReader(client.getInputStream()))
+                        var pluginId: String? = null
 
-                launch(Dispatchers.IO) {
-                    val receiver = BufferedReader(InputStreamReader(client.getInputStream()))
-                    var pluginId: String? = null
-
-                    try {
-                        while (true) {
-                            val message = receiver.readLine() ?: break
-
-                            if (message.startsWith("ack ")) {
-                                val messageParts = message.split(" ")
-                                pluginId = messageParts[1]
-
-                                clients[pluginId] = PrintWriter(client.getOutputStream(), true)
-                                continue
-                            }
-
-                            if (message == "show") {
-                                windowRepository.show()
-                                continue
-                            }
-
-                            val entries = Json.decodeFromString<List<Entry>>(message)
-                            _pluginResponse.send(entries)
-                        }
-                    } finally {
                         try {
-                            pluginId?.let { clients.remove(it) }
-                            client.close()
-                        } catch (_: Exception) {
+                            while (true) {
+                                val message = receiver.readLine() ?: break
+
+                                if (message.startsWith("ack ")) {
+                                    val messageParts = message.split(" ")
+                                    pluginId = messageParts[1]
+
+                                    clients[pluginId] = PrintWriter(client.getOutputStream(), true)
+                                    continue
+                                }
+
+                                if (message == "show") {
+                                    windowRepository.show()
+                                    continue
+                                }
+
+                                val entries = Json.decodeFromString<List<Entry>>(message)
+                                _pluginResponse.send(entries)
+                            }
+                        } finally {
+                            try {
+                                pluginId?.let { clients.remove(it) }
+                                client.close()
+                            } catch (_: Exception) {
+                            }
                         }
                     }
                 }
+            } catch (_: Exception) {
+                println()
             }
-        } catch (_: Exception) {
-            println()
         }
     }
 
@@ -116,9 +122,16 @@ class SocketRepository(val windowRepository: WindowRepository) {
     }
 
     suspend fun killSocket() = withContext(Dispatchers.IO) {
-        clients.values.forEach { it.println("kill") }
+        clients.forEach { client ->
+            runCatching {
+                println("Killing: [${client.key}]")
+                client.value.println("kill")
+            }
+        }
 
-        socketJob.cancel()
+        clients.clear()
+        socketJob?.cancel()
+        serverSocket = null
         SOCKET_FILE.delete()
     }
 }

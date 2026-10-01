@@ -44,15 +44,16 @@ class DevTabVM(
                 pluginsRepository.setRunningPlugins(true)
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    socketRepository.socketJob.start()
+                    socketRepository.createSocket()
+                    pluginsRepository.index()
                 }
             }
 
             Intent.ReIndexClick -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     socketRepository.killSocket()
+                    socketRepository.createSocket()
                     pluginsRepository.index()
-                    socketRepository.socketJob.start()
                 }
             }
         }
