@@ -232,7 +232,7 @@ class MainScreenVM(
 
             is ShowEntries -> {
                 scope.launch {
-                    _state.update { it.copy(entries = action.entries) }
+                    _state.update { it.copy(entries = action.entries, selectionIndex = 0) }
                 }
             }
 
