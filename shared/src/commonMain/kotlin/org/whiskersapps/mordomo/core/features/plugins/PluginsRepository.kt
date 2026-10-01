@@ -28,6 +28,9 @@ class PluginsRepository(
     private val _manifests = MutableStateFlow<List<PluginManifest>>(emptyList())
     val manifests = _manifests.asStateFlow()
 
+    private val _runningPlugins = MutableStateFlow(false)
+    val runningPlugins = _runningPlugins.asStateFlow()
+
     init {
         CoroutineScope(IO).launch {
             index()
@@ -101,6 +104,11 @@ class PluginsRepository(
             }
 
         _manifests.update { newManifests }
+        _runningPlugins.update { true }
+    }
+
+    fun setRunningPlugins(running: Boolean) {
+        _runningPlugins.update { running }
     }
 
     // This function is very vibe coded xD

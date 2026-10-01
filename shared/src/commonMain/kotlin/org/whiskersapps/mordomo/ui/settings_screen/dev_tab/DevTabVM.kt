@@ -18,22 +18,30 @@ class DevTabVM(
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
 
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            pluginsRepository.runningPlugins.collect { running ->
+                _state.update { it.copy(runningPlugins = running) }
+            }
+        }
+    }
+
     fun onIntent(intent: Intent) {
         when (intent) {
             Intent.StartStopClick -> {
                 val runningPlugins = state.value.runningPlugins
 
                 if (runningPlugins) {
-                    _state.update { it.copy(runningPlugins = false) }
-
                     CoroutineScope(Dispatchers.IO).launch {
                         socketRepository.killSocket()
                     }
 
+                    pluginsRepository.setRunningPlugins(false)
+
                     return
                 }
 
-                _state.update { it.copy(runningPlugins = true) }
+                pluginsRepository.setRunningPlugins(true)
 
                 CoroutineScope(Dispatchers.IO).launch {
                     socketRepository.socketJob.start()
