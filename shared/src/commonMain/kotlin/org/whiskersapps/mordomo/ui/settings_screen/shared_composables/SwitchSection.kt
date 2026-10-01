@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 
 @Composable
 fun SwitchSection(
@@ -24,13 +25,13 @@ fun SwitchSection(
         Column(Modifier.fillMaxWidth().weight(1f)) {
             Text(
                 text = title,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
                 fontWeight = FontWeight.Medium,
             )
 
             Text(
                 text = description,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
             )
         }
 

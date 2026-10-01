@@ -65,6 +65,7 @@ import mordomo.shared.generated.resources.folder
 import mordomo.shared.generated.resources.trash
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.form_screen.FormScreenIntent as Intent
 
 @Composable
@@ -86,7 +87,7 @@ fun FormScreen(
 
     Column(
         Modifier.fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(LocalTheme.current.main)
             .onPreviewKeyEvent { event ->
                 when (event.key) {
                     Key.Escape -> {
@@ -103,7 +104,7 @@ fun FormScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(LocalTheme.current.secondary)
                     .clickable {
                         onIntent(Intent.Back)
                         focusRequester.freeFocus()
@@ -114,7 +115,7 @@ fun FormScreen(
                     modifier = Modifier.size(16.dp),
                     painter = painterResource(Res.drawable.arrow_left),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
+                    tint = LocalTheme.current.textMain,
                 )
             }
 
@@ -122,7 +123,7 @@ fun FormScreen(
 
             Text(
                 text = state.form.title,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -173,13 +174,13 @@ fun FormScreen(
                                 Column(Modifier.fillMaxWidth().weight(1f)) {
                                     Text(
                                         text = input.title,
-                                        color = MaterialTheme.colorScheme.onBackground,
+                                        color = LocalTheme.current.textMain,
                                         fontWeight = FontWeight.Medium,
                                     )
 
                                     Text(
                                         text = input.description,
-                                        color = MaterialTheme.colorScheme.onBackground,
+                                        color = LocalTheme.current.textMain,
                                     )
                                 }
 
@@ -202,7 +203,7 @@ fun FormScreen(
                                     .border(
                                         1.dp,
                                         shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.onBackground
+                                        color = LocalTheme.current.textMain
                                     )
                                     .clickable {
                                         onIntent(Intent.PathInput(input))
@@ -214,7 +215,7 @@ fun FormScreen(
                                     modifier = Modifier.size(24.dp),
                                     painter = painterResource(if (input.selectFolder) Res.drawable.folder else Res.drawable.file),
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onBackground,
+                                    tint = LocalTheme.current.textMain,
                                 )
 
                                 Spacer(Modifier.width(16.dp))
@@ -222,7 +223,7 @@ fun FormScreen(
                                 Text(
                                     modifier = Modifier.fillMaxWidth().weight(1f),
                                     text = if (input.value == null) "Select a ${if (input.selectFolder) "folder" else "file"}" else input.value.toString(),
-                                    color = MaterialTheme.colorScheme.onBackground,
+                                    color = LocalTheme.current.textMain,
                                     overflow = TextOverflow.Ellipsis,
                                     maxLines = 1
                                 )
@@ -240,7 +241,7 @@ fun FormScreen(
                                             modifier = Modifier.size(24.dp),
                                             painter = painterResource(Res.drawable.trash),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onBackground,
+                                            tint = LocalTheme.current.textMain,
                                         )
                                     }
                                 }
@@ -263,7 +264,7 @@ fun FormScreen(
                                             .border(
                                                 1.dp,
                                                 shape = RoundedCornerShape(12.dp),
-                                                color = MaterialTheme.colorScheme.onBackground
+                                                color = LocalTheme.current.textMain
                                             )
                                             .clickable {
                                                 expanded = !expanded
@@ -280,7 +281,7 @@ fun FormScreen(
                                             modifier = Modifier.size(24.dp),
                                             painter = painterResource(Res.drawable.chevron_down),
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onBackground,
+                                            tint = LocalTheme.current.textMain,
                                         )
                                     }
 
@@ -325,13 +326,13 @@ fun FormScreen(
 fun InputHeader(title: String, description: String) {
     Text(
         text = title,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalTheme.current.textMain,
         fontWeight = FontWeight.Medium,
     )
 
     Text(
         text = description,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalTheme.current.textMain,
     )
 
     Spacer(Modifier.height(4.dp))

@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabState as State
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabVM as VM
@@ -40,12 +41,12 @@ fun DevTab(
         Column(Modifier.fillMaxWidth().weight(1f)) {
             Text(
                 text = if (state.runningPlugins) "Stop Plugins" else "Start Plugins",
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
             )
 
             Text(
                 text = "Start/Stop running plugins",
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
                 fontSize = 12.sp
             )
         }
@@ -67,12 +68,12 @@ fun DevTab(
         Column(Modifier.fillMaxWidth().weight(1f)) {
             Text(
                 text = "Re-Index Plugins",
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
             )
 
             Text(
                 text = "Detect new plugins and changes",
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
                 fontSize = 12.sp
             )
         }

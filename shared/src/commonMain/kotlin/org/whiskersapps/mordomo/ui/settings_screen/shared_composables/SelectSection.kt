@@ -30,6 +30,7 @@ import lib.SelectSetting
 import mordomo.shared.generated.resources.Res
 import mordomo.shared.generated.resources.chevron_down
 import org.jetbrains.compose.resources.painterResource
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,13 +45,13 @@ fun SelectSection(
 
     Text(
         text = title,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalTheme.current.textMain,
         fontWeight = FontWeight.Medium,
     )
 
     Text(
         text = description,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalTheme.current.textMain,
     )
 
     ExposedDropdownMenuBox(
@@ -59,7 +60,7 @@ fun SelectSection(
     ) {
         Column(
             Modifier.clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.background)
+                .background(LocalTheme.current.main)
         ) {
             Row(
                 Modifier.fillMaxWidth()
@@ -67,7 +68,7 @@ fun SelectSection(
                     .border(
                         1.dp,
                         shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = LocalTheme.current.textMain
                     )
                     .clickable {
                         expanded = !expanded
@@ -84,7 +85,7 @@ fun SelectSection(
                     modifier = Modifier.size(24.dp),
                     painter = painterResource(Res.drawable.chevron_down),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
+                    tint = LocalTheme.current.textMain,
                 )
             }
 

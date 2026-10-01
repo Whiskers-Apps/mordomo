@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 
 @Composable
 fun TextSection(
@@ -27,13 +28,13 @@ fun TextSection(
 ) {
     Text(
         text = title,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalTheme.current.textMain,
         fontWeight = FontWeight.Medium,
     )
 
     Text(
         text = description,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalTheme.current.textMain,
     )
 
     Spacer(modifier = Modifier.height(2.dp))
@@ -44,8 +45,8 @@ fun TextSection(
         onValueChange = { onValueChange(it) },
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = MaterialTheme.colorScheme.background,
-            focusedContainerColor = MaterialTheme.colorScheme.background,
+            unfocusedContainerColor = LocalTheme.current.main,
+            focusedContainerColor = LocalTheme.current.main,
         ),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         singleLine = true,

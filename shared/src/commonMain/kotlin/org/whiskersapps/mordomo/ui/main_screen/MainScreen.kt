@@ -57,7 +57,9 @@ import mordomo.shared.generated.resources.base_icon
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.whiskersapps.mordomo.core.utils.getImageFromPath
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.shared.MordomoTheme
+import java.time.LocalTime
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenIntent as Intent
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState as State
 
@@ -75,229 +77,230 @@ fun MainScreen(
     state: State,
     onIntent: (Intent) -> Unit
 ) {
-    MordomoTheme {
-        val listState = rememberLazyListState()
-        val focusRequester = remember { FocusRequester() }
-        val searchFocusRequester = remember { FocusRequester() }
-        val density = LocalDensity.current
-        val windowInfo = LocalWindowInfo.current
-        val scope = rememberCoroutineScope()
-        var showConfirmWarning by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val focusRequester = remember { FocusRequester() }
+    val searchFocusRequester = remember { FocusRequester() }
+    val density = LocalDensity.current
+    val windowInfo = LocalWindowInfo.current
+    val scope = rememberCoroutineScope()
+    var showConfirmWarning by remember { mutableStateOf(false) }
 
-        // This is not the most performant but NOTHING works so yolo. It focus when opening the window
-        if (state.focusWindow && windowInfo.isWindowFocused) {
-            scope.launch { searchFocusRequester.requestFocus() }
+    // This is not the most performant but NOTHING works so yolo. It focus when opening the window
+    if (state.focusWindow && windowInfo.isWindowFocused) {
+        scope.launch { searchFocusRequester.requestFocus() }
+    }
+
+    // This refocus when coming from other screens
+    LaunchedEffect(state.refocusTrigger) {
+        scope.launch {
+            searchFocusRequester.requestFocus()
         }
+    }
 
-        // This refocus when coming from other screens
-        LaunchedEffect(state.refocusTrigger) {
-            scope.launch {
-                searchFocusRequester.requestFocus()
-            }
+    LaunchedEffect(state.selectionIndex) {
+        if (state.entries.isEmpty()) return@LaunchedEffect
+        val layoutInfo = listState.layoutInfo
+        val itemInfo = layoutInfo.visibleItemsInfo.find { it.index == state.selectionIndex }
+
+        val isFullyVisible = itemInfo != null &&
+                itemInfo.offset >= layoutInfo.viewportStartOffset &&
+                (itemInfo.offset + itemInfo.size) <= layoutInfo.viewportEndOffset
+
+        if (!isFullyVisible) {
+            listState.animateScrollToItem(state.selectionIndex)
         }
+    }
 
-        LaunchedEffect(state.selectionIndex) {
-            if (state.entries.isEmpty()) return@LaunchedEffect
-            val layoutInfo = listState.layoutInfo
-            val itemInfo = layoutInfo.visibleItemsInfo.find { it.index == state.selectionIndex }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LocalTheme.current.main)
+            .focusRequester(focusRequester)
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                when (event.key) {
+                    Key.Escape if event.type == KeyEventType.KeyDown -> {
+                        onIntent(Intent.CloseWindow)
+                        showConfirmWarning = false
+                        true
+                    }
 
-            val isFullyVisible = itemInfo != null &&
-                    itemInfo.offset >= layoutInfo.viewportStartOffset &&
-                    (itemInfo.offset + itemInfo.size) <= layoutInfo.viewportEndOffset
+                    Key.DirectionDown if event.type == KeyEventType.KeyDown -> {
+                        onIntent(Intent.ArrowDownClick)
+                        showConfirmWarning = false
+                        true
+                    }
 
-            if (!isFullyVisible) {
-                listState.animateScrollToItem(state.selectionIndex)
-            }
-        }
+                    Key.DirectionUp if event.type == KeyEventType.KeyDown -> {
+                        onIntent(Intent.ArrowUpClick)
+                        showConfirmWarning = false
+                        true
+                    }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .focusRequester(focusRequester)
-                .focusable()
-                .onPreviewKeyEvent { event ->
-                    when (event.key) {
-                        Key.Escape if event.type == KeyEventType.KeyDown -> {
-                            onIntent(Intent.CloseWindow)
-                            showConfirmWarning = false
-                            true
+                    Key.Enter if event.type == KeyEventType.KeyDown -> {
+                        val action = state.entries[state.selectionIndex].action ?: return@onPreviewKeyEvent true
+
+                        val confirm = when (action) {
+                            is CopyImage -> action.confirm
+                            is CopyText -> action.confirm
+                            is Form -> action.confirm
+                            is OpenApp -> action.confirm
+                            is OpenUrl -> action.confirm
+                            is Plugin -> action.confirm
+                            is ShowEntries -> action.confirm
                         }
 
-                        Key.DirectionDown if event.type == KeyEventType.KeyDown -> {
-                            onIntent(Intent.ArrowDownClick)
-                            showConfirmWarning = false
-                            true
-                        }
-
-                        Key.DirectionUp if event.type == KeyEventType.KeyDown -> {
-                            onIntent(Intent.ArrowUpClick)
-                            showConfirmWarning = false
-                            true
-                        }
-
-                        Key.Enter if event.type == KeyEventType.KeyDown -> {
-                            val action = state.entries[state.selectionIndex].action ?: return@onPreviewKeyEvent true
-
-                            val confirm = when (action) {
-                                is CopyImage -> action.confirm
-                                is CopyText -> action.confirm
-                                is Form -> action.confirm
-                                is OpenApp -> action.confirm
-                                is OpenUrl -> action.confirm
-                                is Plugin -> action.confirm
-                                is ShowEntries -> action.confirm
-                            }
-
-                            if (confirm) {
-                                if (showConfirmWarning) {
-                                    showConfirmWarning = false
-                                    onIntent(Intent.EnterClick)
-                                } else {
-                                    showConfirmWarning = true
-                                }
-                            } else {
+                        if (confirm) {
+                            if (showConfirmWarning) {
+                                showConfirmWarning = false
                                 onIntent(Intent.EnterClick)
+                            } else {
+                                showConfirmWarning = true
                             }
-
-                            true
+                        } else {
+                            onIntent(Intent.EnterClick)
                         }
 
-                        Key.S if event.type == KeyEventType.KeyDown && event.isCtrlPressed -> {
-                            onIntent(Intent.SettingsShortcutClick)
-                            showConfirmWarning = false
-                            true
-                        }
+                        true
+                    }
 
-                        else -> {
-                            false
-                        }
+                    Key.S if event.type == KeyEventType.KeyDown && event.isCtrlPressed -> {
+                        onIntent(Intent.SettingsShortcutClick)
+                        showConfirmWarning = false
+                        true
+                    }
+
+                    else -> {
+                        false
                     }
                 }
+            }
+    ) {
+        Column(
+            Modifier.fillMaxHeight()
+                .weight(1f)
         ) {
-            Column(
-                Modifier.fillMaxHeight()
-                    .weight(1f)
+            Box(
+                Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Box(
-                    Modifier.padding(top = 24.dp, start = 24.dp, end = 24.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    BasicTextField(
-                        modifier = Modifier.focusRequester(searchFocusRequester),
-                        value = state.searchText,
-                        onValueChange = { onIntent(Intent.SearchTextType(it)) },
-                        textStyle = TextStyle(
-                            color = MaterialTheme.colorScheme.onBackground,
-                        ),
-                        cursorBrush = SolidColor(MaterialTheme.colorScheme.onBackground),
-                        singleLine = true
+                BasicTextField(
+                    modifier = Modifier.focusRequester(searchFocusRequester),
+                    value = state.searchText,
+                    onValueChange = { onIntent(Intent.SearchTextType(it)) },
+                    textStyle = TextStyle(
+                        color = LocalTheme.current.textMain,
+                    ),
+                    cursorBrush = SolidColor(LocalTheme.current.textMain),
+                    singleLine = true
+                )
+                if (state.searchText.isEmpty()) {
+                    Text(
+                        text = "Search",
+                        color = LocalTheme.current.textSecondary
                     )
-                    if (state.searchText.isEmpty()) {
-                        Text("Search")
-                    }
                 }
+            }
 
 
-                Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-                LazyColumn(
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    itemsIndexed(items = state.entries) { index, entry ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .conditional(state.selectionIndex == index) {
-                                    background(MaterialTheme.colorScheme.surfaceVariant)
-                                }
-                                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            entry.image?.let { image ->
-                                val painter = remember(image, density) {
-                                    getImageFromPath(image, density)
-                                }
-
-                                painter?.let {
-                                    Image(
-                                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)),
-                                        painter = painter,
-                                        contentDescription = null,
-                                    )
-
-                                    Spacer(Modifier.width(16.dp))
-                                }
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                itemsIndexed(items = state.entries) { index, entry ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .conditional(state.selectionIndex == index) {
+                                background(LocalTheme.current.secondary)
+                            }
+                            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        entry.image?.let { image ->
+                            val painter = remember(image, density) {
+                                getImageFromPath(image, density)
                             }
 
-
-                            Column(
-                                modifier = Modifier.fillMaxWidth().weight(1f),
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = entry.title,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onBackground
+                            painter?.let {
+                                Image(
+                                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)),
+                                    painter = painter,
+                                    contentDescription = null,
                                 )
 
-                                entry.description?.let { description ->
-                                    Text(
-                                        text = description,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
+                                Spacer(Modifier.width(16.dp))
                             }
+                        }
 
-                            if (showConfirmWarning && index == state.selectionIndex) {
-                                Box(
-                                    modifier = Modifier.height(IntrinsicSize.Max)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.error)
-                                        .padding(8.dp)
-                                ) {
-                                    Text(
-                                        text = "Confirm",
-                                        color = MaterialTheme.colorScheme.onError,
-                                    )
-                                }
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = entry.title,
+                                fontSize = 14.sp,
+                                color = LocalTheme.current.textMain
+                            )
+
+                            entry.description?.let { description ->
+                                Text(
+                                    text = description,
+                                    fontSize = 12.sp,
+                                    color = LocalTheme.current.textMain
+                                )
+                            }
+                        }
+
+                        if (showConfirmWarning && index == state.selectionIndex) {
+                            Box(
+                                modifier = Modifier.height(IntrinsicSize.Max)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(LocalTheme.current.danger)
+                                    .padding(8.dp)
+                            ) {
+                                Text(
+                                    text = "Confirm",
+                                    color = LocalTheme.current.onDanger,
+                                )
                             }
                         }
                     }
                 }
             }
+        }
 
-            Row(
-                Modifier.fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row {
-                    Image(
-                        modifier = Modifier.height(24.dp),
-                        painter = painterResource(Res.drawable.base_icon),
-                        contentDescription = null
-                    )
+        Row(
+            Modifier.fillMaxWidth()
+                .background(LocalTheme.current.secondary)
+                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row {
+                Image(
+                    modifier = Modifier.height(24.dp),
+                    painter = painterResource(Res.drawable.base_icon),
+                    contentDescription = null
+                )
 
-                    Spacer(Modifier.width(8.dp))
-
-                    Text(
-                        text = state.context,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 12.sp
-                    )
-                }
-
+                Spacer(Modifier.width(8.dp))
 
                 Text(
-                    text = if (state.entries.isEmpty()) "No Results" else "${state.entries.size} Results",
-                    color = MaterialTheme.colorScheme.onBackground,
+                    text = state.context,
+                    color = LocalTheme.current.textMain,
                     fontSize = 12.sp
                 )
             }
+
+
+            Text(
+                text = if (state.entries.isEmpty()) "No Results" else "${state.entries.size} Results",
+                color = LocalTheme.current.textMain,
+                fontSize = 12.sp
+            )
         }
     }
 }

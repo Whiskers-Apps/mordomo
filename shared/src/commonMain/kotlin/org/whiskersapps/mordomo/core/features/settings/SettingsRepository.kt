@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import lib.Settings
 import org.whiskersapps.mordomo.core.utils.getFaviconURL
 import org.whiskersapps.mordomo.core.utils.getImageFromPath
 import java.io.File

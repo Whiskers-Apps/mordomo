@@ -28,6 +28,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.NumberSect
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.SelectSection
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.SwitchSection
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.TextSection
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabState as State
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabVM as VM
@@ -60,26 +61,26 @@ fun PluginsTab(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(LocalTheme.current.secondary)
                     .padding(top = 16.dp, end = 16.dp, start = 16.dp)
             ) {
                 Text(
                     text = manifest.name,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = LocalTheme.current.textMain,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
                 )
 
                 Text(
                     text = manifest.description,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = LocalTheme.current.textMain,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Keyword",
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = LocalTheme.current.textMain,
                     fontWeight = FontWeight.Medium,
                 )
 
@@ -99,8 +100,8 @@ fun PluginsTab(
                     },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                        focusedContainerColor = MaterialTheme.colorScheme.background,
+                        unfocusedContainerColor = LocalTheme.current.main,
+                        focusedContainerColor = LocalTheme.current.main,
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     singleLine = true,
@@ -109,7 +110,7 @@ fun PluginsTab(
                 if (manifest.settings.isNotEmpty()) {
                     Spacer(Modifier.height(16.dp))
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.background, thickness = 2.dp)
+                    HorizontalDivider(color = LocalTheme.current.main, thickness = 2.dp)
                 }
 
                 Spacer(Modifier.height(16.dp))

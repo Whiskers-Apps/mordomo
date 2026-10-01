@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -22,12 +23,12 @@ import lib.OpenApp
 import lib.OpenUrl
 import lib.Plugin
 import lib.RunAction
+import lib.SearchEngine
 import lib.ShowEntries
 import org.whiskersapps.mordomo.core.features.actions.ActionHandler
 import org.whiskersapps.mordomo.core.features.apps.AppsRepository
 import org.whiskersapps.mordomo.core.features.form.FormRepository
 import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
-import org.whiskersapps.mordomo.core.features.settings.SearchEngine
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
@@ -60,16 +61,23 @@ class MainScreenVM(
             )
         }
 
+        combine(
+            windowRepository.showWindow,
+            windowRepository.focusTrigger,
+            settingsRepository.settings
+        ) { showWindow, _, settings ->
+            _state.update {
+                it.copy(
+                    focusWindow = showWindow,
+                    refocusTrigger = it.refocusTrigger + 1,
+                    theme = settings!!.theme
+                )
+            }
+        }.launchIn(CoroutineScope(IO))
+
         socketRepository.pluginResponse.onEach { entries ->
             _state.update { it.copy(entries = entries, context = "Plugin") }
         }.launchIn(CoroutineScope(IO))
-
-        windowRepository.showWindow.onEach { showWindow ->
-            _state.update { it.copy(focusWindow = showWindow) }
-        }.launchIn(CoroutineScope(IO))
-
-        windowRepository.focusTrigger.onEach { _state.update { it.copy(refocusTrigger = it.refocusTrigger + 1) } }
-            .launchIn(CoroutineScope(IO))
     }
 
     fun onIntent(intent: Intent) {
@@ -162,7 +170,7 @@ class MainScreenVM(
         scope.launch {
             val newIndex = state.value.selectionIndex - 1
 
-            if (newIndex < 0){
+            if (newIndex < 0) {
                 _state.update { it.copy(selectionIndex = state.value.entries.size - 1) }
                 return@launch
             }

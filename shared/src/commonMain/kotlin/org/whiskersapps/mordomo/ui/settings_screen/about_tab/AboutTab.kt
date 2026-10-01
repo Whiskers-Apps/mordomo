@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.koin.compose.koinInject
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabState as State
 
@@ -37,7 +38,7 @@ fun AboutTab(
     Column {
         Text(
             text = "Version",
-            color = MaterialTheme.colorScheme.onBackground,
+            color = LocalTheme.current.textMain,
             fontWeight = FontWeight.Medium,
         )
 
@@ -45,14 +46,14 @@ fun AboutTab(
 
         Text(
             text = state.version,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = LocalTheme.current.textMain,
         )
 
         Spacer(Modifier.height(16.dp))
 
         Text(
             text = "License",
-            color = MaterialTheme.colorScheme.onBackground,
+            color = LocalTheme.current.textMain,
             fontWeight = FontWeight.Medium,
         )
 
@@ -60,7 +61,7 @@ fun AboutTab(
 
         Text(
             text = "MIT",
-            color = MaterialTheme.colorScheme.onBackground,
+            color = LocalTheme.current.textMain,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -71,7 +72,7 @@ fun AboutTab(
         ) {
             Text(
                 text = "Repository",
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
                 fontWeight = FontWeight.Medium,
             )
 
@@ -79,7 +80,7 @@ fun AboutTab(
 
             Text(
                 text = "github.com/whiskers-apps/mordomo",
-                color = MaterialTheme.colorScheme.onBackground,
+                color = LocalTheme.current.textMain,
             )
         }
     }

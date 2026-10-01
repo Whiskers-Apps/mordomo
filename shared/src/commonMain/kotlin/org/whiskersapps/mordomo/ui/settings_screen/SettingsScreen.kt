@@ -46,6 +46,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTab
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenVM as VM
 
@@ -67,15 +68,43 @@ fun SettingsScreen(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(LocalTheme.current.main)
     ) {
         Column(
             Modifier.fillMaxHeight()
                 .width(IntrinsicSize.Min)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(LocalTheme.current.secondary)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(CircleShape)
+                    .background(LocalTheme.current.main)
+                    .clickable {
+                        onIntent(Intent.Back)
+                    }
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    modifier = Modifier.size(16.dp),
+                    painter = painterResource(Res.drawable.arrow_left),
+                    contentDescription = null,
+                    tint = LocalTheme.current.textMain,
+                )
+
+                Spacer(Modifier.width(8.dp))
+
+                Text(
+                    text = "Back",
+                    color = LocalTheme.current.textMain,
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
             Tab(
                 icon = Res.drawable.home,
                 text = "General",
@@ -112,25 +141,7 @@ fun SettingsScreen(
             )
         }
 
-        Column(Modifier.padding(24.dp)){
-            Box(
-                Modifier.clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable {
-                        onIntent(Intent.Back)
-                    }
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    modifier = Modifier.size(16.dp),
-                    painter = painterResource(Res.drawable.arrow_left),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
+        Column(Modifier.padding(24.dp)) {
             when (state.tab) {
                 SettingsTab.General -> {
                     GeneralTab()
@@ -161,7 +172,7 @@ fun Tab(icon: DrawableResource, text: String, selected: Boolean, onClick: () -> 
     Row(
         modifier = Modifier.clip(CircleShape)
             .fillMaxWidth()
-            .background(if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.surfaceVariant)
+            .background(if (selected) LocalTheme.current.main else LocalTheme.current.secondary)
             .clickable { onClick() }
             .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -170,12 +181,12 @@ fun Tab(icon: DrawableResource, text: String, selected: Boolean, onClick: () -> 
             modifier = Modifier.size(24.dp),
             painter = painterResource(icon),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground
+            tint = LocalTheme.current.textMain
         )
 
         Spacer(Modifier.width(8.dp))
 
-        Text(text = text, color = MaterialTheme.colorScheme.onBackground)
+        Text(text = text, color = LocalTheme.current.textMain)
     }
 }
 

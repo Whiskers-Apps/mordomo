@@ -40,6 +40,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenVM
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabVM
+import org.whiskersapps.mordomo.ui.shared.MordomoTheme
 
 val appModule = module {
     single { SocketRepository(get()) }
@@ -92,25 +93,27 @@ fun main() {
                 resizable = false,
                 visible = showWindow
             ) {
-                LaunchedEffect(showWindow) {
-                    if (showWindow) {
-                        window.toFront()
-                        window.requestFocus()
-                        windowRepository.requestFocus()
-                    }
-                }
-
-                when (route) {
-                    Route.Main -> {
-                        MainScreenRoot()
+                MordomoTheme(settings) {
+                    LaunchedEffect(showWindow) {
+                        if (showWindow) {
+                            window.toFront()
+                            window.requestFocus()
+                            windowRepository.requestFocus()
+                        }
                     }
 
-                    Route.Form -> {
-                        FormScreenRoot()
-                    }
+                    when (route) {
+                        Route.Main -> {
+                            MainScreenRoot()
+                        }
 
-                    Route.Settings -> {
-                        SettingsScreenRoot()
+                        Route.Form -> {
+                            FormScreenRoot()
+                        }
+
+                        Route.Settings -> {
+                            SettingsScreenRoot()
+                        }
                     }
                 }
             }
