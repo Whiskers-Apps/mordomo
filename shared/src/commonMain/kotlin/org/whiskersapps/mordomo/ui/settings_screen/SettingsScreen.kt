@@ -46,6 +46,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTab
+import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTabRoot
 import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenVM as VM
@@ -148,7 +149,7 @@ fun SettingsScreen(
                 }
 
                 SettingsTab.Theme -> {
-                    ThemeTab()
+                    ThemeTabRoot()
                 }
 
                 SettingsTab.Plugins -> {

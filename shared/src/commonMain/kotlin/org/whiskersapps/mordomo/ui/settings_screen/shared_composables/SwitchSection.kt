@@ -1,5 +1,6 @@
 package org.whiskersapps.mordomo.ui.settings_screen.shared_composables
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +22,7 @@ fun SwitchSection(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(Modifier.fillMaxWidth()) {
+    Row(Modifier.fillMaxWidth().clickable { onCheckedChange(!checked) }) {
         Column(Modifier.fillMaxWidth().weight(1f)) {
             Text(
                 text = title,

@@ -40,6 +40,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenVM
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabVM
+import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTabVM
 import org.whiskersapps.mordomo.ui.shared.MordomoTheme
 
 val appModule = module {
@@ -56,8 +57,9 @@ val appModule = module {
     single { FormScreenVM(get(), get(), get()) }
 
     factory { SettingsScreenVM(get()) }
-    factory { AboutTabVM() }
+    factory { ThemeTabVM(get()) }
     factory { PluginsTabVM(get(), get()) }
+    factory { AboutTabVM() }
     factory { DevTabVM(get(), get()) }
 }
 

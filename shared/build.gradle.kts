@@ -36,6 +36,8 @@ kotlin {
             implementation("com.github.Whiskers-Apps:sniffer-kt:1.1.0")
 
             implementation("org.whiskersapps:mordomo-core:0.2.0")
+
+            implementation("com.github.skydoves:colorpicker-compose:1.3.0")
         }
 
         commonTest.dependencies {
