@@ -11,6 +11,7 @@ import org.whiskersapps.mordomo.core.features.indexing.getCacheDir
 import java.io.File
 import kotlinx.serialization.json.Json
 import org.whiskersapps.mordomo.core.features.indexing.getApplicationDirs
+import org.whiskersapps.mordomo.core.utils.addLog
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.StandardWatchEventKinds
@@ -50,7 +51,7 @@ class AppsRepository(
             val json = file.readText()
             apps = Json.decodeFromString(json)
         } catch (e: Exception) {
-            println("Failed to read apps cache. $e")
+            addLog(e)
         }
     }
 

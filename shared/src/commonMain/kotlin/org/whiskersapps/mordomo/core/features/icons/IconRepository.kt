@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.whiskersapps.mordomo.core.features.indexing.getCacheDir
+import org.whiskersapps.mordomo.core.utils.addLog
 import java.io.File
 import java.nio.file.Files
 import kotlin.io.path.absolutePathString
@@ -49,7 +50,7 @@ class IconRepository {
 
             _iconsLoaded.send(Unit)
         } catch (e: Exception) {
-            println("Failed to read icons cache. $e")
+            addLog(e)
         }
     }
 
@@ -168,7 +169,8 @@ class IconRepository {
 
         val link = try {
             Files.readSymbolicLink(path.toPath())
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            addLog(e)
             return null
         }
 

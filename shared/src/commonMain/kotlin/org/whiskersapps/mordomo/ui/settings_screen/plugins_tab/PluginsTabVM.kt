@@ -4,6 +4,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import lib.CheckSetting
@@ -23,12 +25,14 @@ class PluginsTabVM(
     private val _state = MutableStateFlow(State())
     val state = _state.asStateFlow()
 
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     init {
         load()
 
-        CoroutineScope(Dispatchers.IO).launch {
-            pluginsRepository.manifests.collect { load() }
-        }
+        pluginsRepository.manifests
+            .onEach { load() }
+            .launchIn(scope)
     }
 
     fun load() {

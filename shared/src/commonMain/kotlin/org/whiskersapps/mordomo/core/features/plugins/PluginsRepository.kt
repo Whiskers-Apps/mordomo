@@ -15,6 +15,8 @@ import lib.PluginManifest
 import lib.SelectSetting
 import lib.TextSetting
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
+import org.whiskersapps.mordomo.core.utils.LOG_FILE
+import org.whiskersapps.mordomo.core.utils.addLog
 import java.io.File
 import java.util.Collections.emptyMap
 
@@ -98,8 +100,8 @@ class PluginsRepository(
                         ProcessBuilder(getJavaBin(), "-jar", pluginFile.path)
                             .start()
                     }
-                } catch (_: Exception) {
-                    println("Failed to decode manifest. [${file.path}]")
+                } catch (e: Exception) {
+                    addLog(e)
                 }
             }
 

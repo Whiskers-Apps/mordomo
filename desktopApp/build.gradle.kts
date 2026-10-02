@@ -32,6 +32,8 @@ compose.desktop {
             targetFormats(TargetFormat.AppImage)
             packageName = "mordomo"
             packageVersion = "1.0.0"
+
+            modules("java.instrument", "java.net.http", "jdk.unsupported")
         }
     }
 }

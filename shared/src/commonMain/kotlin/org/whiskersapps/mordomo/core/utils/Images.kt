@@ -24,7 +24,7 @@ fun getImageFromPath(path: String, density: Density): Painter? {
             }
         }
     } catch (e: Exception) {
-        println("Failed to get image from $path. $e")
+        addLog(e)
         null
     }
 }

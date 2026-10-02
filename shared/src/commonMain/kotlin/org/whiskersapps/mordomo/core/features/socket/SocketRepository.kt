@@ -14,6 +14,7 @@ import lib.Action
 import lib.Entry
 import lib.PluginMessage
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
+import org.whiskersapps.mordomo.core.utils.addLog
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -60,7 +61,7 @@ class SocketRepository(val windowRepository: WindowRepository) {
 
             exitProcess(0)
         } catch (e: Exception) {
-            println("Failed to load from file. $e")
+            addLog(e)
             return@withContext false
         }
     }
@@ -106,13 +107,14 @@ class SocketRepository(val windowRepository: WindowRepository) {
                             try {
                                 pluginId?.let { clients.remove(it) }
                                 client.close()
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
+                                addLog(e)
                             }
                         }
                     }
                 }
-            } catch (_: Exception) {
-                println()
+            } catch (e: Exception) {
+                addLog(e)
             }
         }
     }
@@ -123,9 +125,11 @@ class SocketRepository(val windowRepository: WindowRepository) {
 
     suspend fun killSocket() = withContext(Dispatchers.IO) {
         clients.forEach { client ->
-            runCatching {
+            try {
                 println("Killing: [${client.key}]")
                 client.value.println("kill")
+            } catch (e: Exception) {
+                addLog(e)
             }
         }
 
