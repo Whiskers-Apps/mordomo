@@ -30,6 +30,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.composable
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.TextSection
 import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.shared.bubble
+import org.whiskersapps.mordomo.ui.shared.buttonBubble
 import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabState as State
 
@@ -110,7 +111,7 @@ fun SearchEnginesTab(
             Row(
                 modifier = Modifier
                     .padding(top = 2.dp)
-                    .bubble(index, state.searchEngines.size) {
+                    .buttonBubble(index, state.searchEngines.size) {
                         showDialog = true
                     },
                 verticalAlignment = Alignment.CenterVertically

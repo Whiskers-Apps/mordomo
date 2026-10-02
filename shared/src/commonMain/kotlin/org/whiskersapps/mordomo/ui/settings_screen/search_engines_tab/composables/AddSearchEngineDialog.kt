@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +36,7 @@ import lib.SearchEngine
 import org.whiskersapps.mordomo.core.utils.URL_REGEX
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.SwitchSection
 import org.whiskersapps.mordomo.ui.shared.LocalTheme
+import org.whiskersapps.mordomo.ui.shared.verticalScrollbar
 
 @Composable
 fun AddSearchEngineDialog(
@@ -51,6 +55,7 @@ fun AddSearchEngineDialog(
     }
 
     val hasQueryKeyword by remember(query) { mutableStateOf(query.contains("%s")) }
+    val scrollState = rememberScrollState()
 
     Dialog(
         onDismissRequest = { onCancel() },
@@ -61,84 +66,91 @@ fun AddSearchEngineDialog(
                 .background(LocalTheme.current.main)
                 .padding(24.dp)
         ) {
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Column {
+            Column(
+                Modifier.fillMaxHeight()
+                    .weight(1f)
+                    .verticalScrollbar(scrollState)
+                    .verticalScroll(scrollState)
+            ) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Column {
+                        Text(
+                            text = "Edit Search Engine",
+                            color = LocalTheme.current.textMain
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = "Name",
+                    color = LocalTheme.current.textMain
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = "Query",
+                    color = LocalTheme.current.textMain
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = query,
+                    onValueChange = { query = it },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                if (!hasQueryKeyword) {
                     Text(
-                        text = "Edit Search Engine",
-                        color = LocalTheme.current.textMain
+                        text = """Query requires a "%s" in the url to know where to add the search text""",
+                        color = LocalTheme.current.danger
                     )
                 }
-            }
 
-            Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
-            Text(
-                text = "Name",
-                color = LocalTheme.current.textMain
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = name,
-                onValueChange = { name = it },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "Query",
-                color = LocalTheme.current.textMain
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = query,
-                onValueChange = { query = it },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            if (!hasQueryKeyword) {
                 Text(
-                    text = """Query requires a "%s" in the url to know where to add the search text""",
-                    color = LocalTheme.current.danger
+                    text = "Keyword",
+                    color = LocalTheme.current.textMain
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = keyword,
+                    onValueChange = { keyword = it },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                SwitchSection(
+                    title = "Default",
+                    description = "Make this the default search engine",
+                    checked = default,
+                    onCheckedChange = { default = it },
                 )
             }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "Keyword",
-                color = LocalTheme.current.textMain
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = keyword,
-                onValueChange = { keyword = it },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            SwitchSection(
-                title = "Default",
-                description = "Make this the default search engine",
-                checked = default,
-                onCheckedChange = { default = it },
-            )
 
             Spacer(Modifier.height(16.dp))
 

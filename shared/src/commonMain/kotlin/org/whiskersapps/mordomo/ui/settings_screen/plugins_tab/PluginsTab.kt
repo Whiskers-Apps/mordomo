@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -29,6 +30,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.SelectSect
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.SwitchSection
 import org.whiskersapps.mordomo.ui.settings_screen.shared_composables.TextSection
 import org.whiskersapps.mordomo.ui.shared.LocalTheme
+import org.whiskersapps.mordomo.ui.shared.bubble
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabState as State
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabVM as VM
@@ -51,29 +53,28 @@ fun PluginsTab(
     val focusRequester = remember { FocusRequester() }
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        items(
+        itemsIndexed(
             items = state.manifests,
-            key = { it.id }
-        ) { manifest ->
+            key = { _, manifest -> manifest.id }
+        ) { index, manifest ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(LocalTheme.current.secondary)
-                    .padding(top = 16.dp, end = 16.dp, start = 16.dp)
+                    .bubble(index, state.manifests.size)
             ) {
                 Text(
                     text = manifest.name,
                     color = LocalTheme.current.textMain,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
+                    fontSize = 18.sp
                 )
 
                 Text(
                     text = manifest.description,
-                    color = LocalTheme.current.textMain,
+                    color = LocalTheme.current.textSecondary,
+                    fontSize = 12.sp
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -106,12 +107,6 @@ fun PluginsTab(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     singleLine = true,
                 )
-
-                if (manifest.settings.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-
-                    HorizontalDivider(color = LocalTheme.current.main, thickness = 2.dp)
-                }
 
                 Spacer(Modifier.height(16.dp))
 

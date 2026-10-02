@@ -39,9 +39,16 @@ fun Modifier.bubbleShape(index: Int, listSize: Int): Modifier {
 }
 
 @Composable
-fun Modifier.bubble(index: Int, listSize: Int, onClick: () -> Unit): Modifier {
+fun Modifier.buttonBubble(index: Int, listSize: Int, onClick: () -> Unit): Modifier {
     return this.bubbleShape(index, listSize)
         .background(LocalTheme.current.secondary)
         .clickable { onClick() }
+        .bubblePadding()
+}
+
+@Composable
+fun Modifier.bubble(index: Int, listSize: Int): Modifier {
+    return this.bubbleShape(index, listSize)
+        .background(LocalTheme.current.secondary)
         .bubblePadding()
 }
