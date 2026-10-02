@@ -79,7 +79,7 @@ fun SearchEngineDialog(
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Column {
                         Text(
-                            text = "Add Search Engine",
+                            text = "Edit Search Engine",
                             color = LocalTheme.current.textMain
                         )
                     }
@@ -204,7 +204,7 @@ fun SearchEngineDialog(
                     enabled = enabled,
                 ) {
                     Text(
-                        text = "Add",
+                        text = "Save",
                         color = LocalTheme.current.onAccent
                     )
                 }
