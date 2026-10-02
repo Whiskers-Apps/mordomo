@@ -2,6 +2,7 @@ package org.whiskersapps.mordomo.ui.settings_screen
 
 enum class SettingsTab{
     General,
+    SearchEngines,
     Theme,
     Plugins,
     About,

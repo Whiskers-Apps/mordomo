@@ -34,6 +34,7 @@ import mordomo.shared.generated.resources.beverage
 import mordomo.shared.generated.resources.file
 import mordomo.shared.generated.resources.home
 import mordomo.shared.generated.resources.info
+import mordomo.shared.generated.resources.loupe
 import mordomo.shared.generated.resources.palette
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -45,6 +46,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabRoot
+import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTab
 import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTabRoot
 import org.whiskersapps.mordomo.ui.shared.LocalTheme
@@ -73,7 +75,7 @@ fun SettingsScreen(
     ) {
         Column(
             Modifier.fillMaxHeight()
-                .width(IntrinsicSize.Min)
+                .width(IntrinsicSize.Max)
                 .background(LocalTheme.current.secondary)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -114,6 +116,13 @@ fun SettingsScreen(
             )
 
             Tab(
+                icon = Res.drawable.loupe,
+                text = "Search Engines",
+                selected = state.tab == SettingsTab.SearchEngines,
+                onClick = { onIntent(Intent.TabSelect(SettingsTab.SearchEngines)) }
+            )
+
+            Tab(
                 icon = Res.drawable.palette,
                 text = "Theme",
                 selected = state.tab == SettingsTab.Theme,
@@ -146,6 +155,10 @@ fun SettingsScreen(
             when (state.tab) {
                 SettingsTab.General -> {
                     GeneralTab()
+                }
+
+                SettingsTab.SearchEngines -> {
+                    SearchEnginesTabRoot()
                 }
 
                 SettingsTab.Theme -> {

@@ -72,6 +72,7 @@ class SettingsRepository {
         getConfigFile().writeText(jsonConf.encodeToString(settings))
 
         assignKeywords()
+        downloadFavicons()
     }
 
     private fun assignKeywords() {

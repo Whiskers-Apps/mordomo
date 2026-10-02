@@ -38,3 +38,7 @@ fun getEngineFaviconPath(id: Int): String {
     val iconPath = File(iconsCacheDir, "${id}.png")
     return iconPath.absolutePath
 }
+
+val URL_REGEX = Regex(
+    """^https?://(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}(?::\d{1,5})?(?:[/?#][^\s]*)?$"""
+)
