@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import lib.SearchEngine
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
+import org.whiskersapps.mordomo.core.utils.addLog
+import org.whiskersapps.mordomo.core.utils.getEngineFaviconPath
+import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
 import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabIntent as Intent
 import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabState as State
@@ -98,6 +101,13 @@ class SearchEnginesTabVM(
                     val newSettings =
                         settings.copy(searchEngines = searchEngines, defaultSearchEngine = defaultEngineId)
 
+
+                    try {
+                        File(getEngineFaviconPath(intent.searchEngine.id)).delete()
+                    } catch (e: Exception) {
+                        addLog(e)
+                    }
+
                     settingsRepository.update(newSettings)
                 }
             }
@@ -108,6 +118,7 @@ class SearchEnginesTabVM(
                     val engines = settings.searchEngines.toMutableList().apply {
                         removeIf { it.id == intent.id }
                     }
+                    val iconPath = File(getEngineFaviconPath(intent.id))
 
                     val defaultEngineId = if (settings.defaultSearchEngine == intent.id)
                         null
@@ -117,6 +128,12 @@ class SearchEnginesTabVM(
                     val newSettings = settings.copy(searchEngines = engines, defaultSearchEngine = defaultEngineId)
 
                     settingsRepository.update(newSettings)
+
+                    try {
+                        iconPath.delete()
+                    } catch (e: Exception) {
+                        addLog(e)
+                    }
                 }
             }
         }
