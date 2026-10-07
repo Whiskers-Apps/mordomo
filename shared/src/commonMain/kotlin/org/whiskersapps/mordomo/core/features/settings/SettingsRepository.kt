@@ -25,9 +25,8 @@ class SettingsRepository {
     private val _settings = MutableStateFlow<Settings?>(null)
     val settings: StateFlow<Settings?> = _settings
 
-    val jsonConf = Json { prettyPrint = true; encodeDefaults = true }
+    val jsonConf = Json { prettyPrint = true; encodeDefaults = true; ignoreUnknownKeys = true }
 
-    /// Map<Keyword, PluginId>
     val pluginsKeywords: MutableMap<String, String> = mutableMapOf()
 
     init {
