@@ -273,34 +273,36 @@ fun MainScreen(
             }
         }
 
-        Row(
-            Modifier.fillMaxWidth()
-                .background(LocalTheme.current.secondary)
-                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row {
-                Image(
-                    modifier = Modifier.height(24.dp),
-                    painter = painterResource(Res.drawable.base_icon),
-                    contentDescription = null
-                )
+        if (!state.hideFooter) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(LocalTheme.current.secondary)
+                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row {
+                    Image(
+                        modifier = Modifier.height(24.dp),
+                        painter = painterResource(Res.drawable.base_icon),
+                        contentDescription = null
+                    )
 
-                Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = state.context,
+                        color = LocalTheme.current.textMain,
+                        fontSize = 12.sp
+                    )
+                }
+
 
                 Text(
-                    text = state.context,
+                    text = if (state.entries.isEmpty()) "No Results" else "${state.entries.size} Results",
                     color = LocalTheme.current.textMain,
                     fontSize = 12.sp
                 )
             }
-
-
-            Text(
-                text = if (state.entries.isEmpty()) "No Results" else "${state.entries.size} Results",
-                color = LocalTheme.current.textMain,
-                fontSize = 12.sp
-            )
         }
     }
 }
@@ -318,7 +320,7 @@ fun Modifier.conditional(
 
 
 @Composable
-@Preview(showBackground = true)
+@Preview
 fun MainScreenPreview() {
     val state = State(
         searchText = "",
@@ -339,7 +341,8 @@ fun MainScreenPreview() {
                 description = null
             ),
         ),
-        context = "Apps"
+        context = "Apps",
+//        hideFooter = true,
     )
 
     MainScreen(state) {}

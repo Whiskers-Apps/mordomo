@@ -11,4 +11,5 @@ data class MainScreenState(
     val focusWindow: Boolean = false,
     val refocusTrigger: Int = 0,
     val context: String = "",
+    val hideFooter: Boolean = false,
 )

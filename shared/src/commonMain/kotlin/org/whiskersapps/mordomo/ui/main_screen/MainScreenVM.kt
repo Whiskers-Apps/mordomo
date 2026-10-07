@@ -66,11 +66,14 @@ class MainScreenVM(
             windowRepository.focusTrigger,
             settingsRepository.settings
         ) { showWindow, _, settings ->
+            if(settings == null) return@combine
+
             _state.update {
                 it.copy(
                     focusWindow = showWindow,
                     refocusTrigger = it.refocusTrigger + 1,
-                    theme = settings!!.theme
+                    theme = settings.theme,
+                    hideFooter = settings.hideFooter,
                 )
             }
         }.launchIn(CoroutineScope(IO))

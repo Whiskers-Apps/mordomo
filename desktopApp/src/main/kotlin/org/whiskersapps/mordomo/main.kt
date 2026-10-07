@@ -1,5 +1,7 @@
 package org.whiskersapps.mordomo
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -12,8 +14,10 @@ import org.whiskersapps.mordomo.ui.main_screen.MainScreenVM
 
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
@@ -35,13 +39,16 @@ import org.whiskersapps.mordomo.core.features.window.Route
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
 import org.whiskersapps.mordomo.ui.form_screen.FormScreenRoot
 import org.whiskersapps.mordomo.ui.form_screen.FormScreenVM
+import org.whiskersapps.mordomo.ui.main_screen.conditional
 import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenRoot
 import org.whiskersapps.mordomo.ui.settings_screen.SettingsScreenVM
 import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabVM
+import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabVM
 import org.whiskersapps.mordomo.ui.settings_screen.theme_tab.ThemeTabVM
+import org.whiskersapps.mordomo.ui.shared.LocalTheme
 import org.whiskersapps.mordomo.ui.shared.MordomoTheme
 
 val appModule = module {
@@ -58,6 +65,7 @@ val appModule = module {
     single { FormScreenVM(get(), get(), get()) }
 
     factory { SettingsScreenVM(get()) }
+    factory { GeneralTabVM(get()) }
     factory { SearchEnginesTabVM(get()) }
     factory { ThemeTabVM(get()) }
     factory { PluginsTabVM(get(), get()) }
@@ -106,17 +114,23 @@ fun main() {
                         }
                     }
 
-                    when (route) {
-                        Route.Main -> {
-                            MainScreenRoot()
+                    Box(
+                        Modifier.fillMaxSize().conditional(settings.drawBorder) {
+                            this.border(2.dp, LocalTheme.current.tertiary)
                         }
+                    ) {
+                        when (route) {
+                            Route.Main -> {
+                                MainScreenRoot()
+                            }
 
-                        Route.Form -> {
-                            FormScreenRoot()
-                        }
+                            Route.Form -> {
+                                FormScreenRoot()
+                            }
 
-                        Route.Settings -> {
-                            SettingsScreenRoot()
+                            Route.Settings -> {
+                                SettingsScreenRoot()
+                            }
                         }
                     }
                 }

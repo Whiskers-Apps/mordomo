@@ -44,6 +44,7 @@ import org.whiskersapps.mordomo.ui.settings_screen.about_tab.AboutTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTab
 import org.whiskersapps.mordomo.ui.settings_screen.dev_tab.DevTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTab
+import org.whiskersapps.mordomo.ui.settings_screen.general_tab.GeneralTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTab
 import org.whiskersapps.mordomo.ui.settings_screen.plugins_tab.PluginsTabRoot
 import org.whiskersapps.mordomo.ui.settings_screen.search_engines_tab.SearchEnginesTabRoot
@@ -154,7 +155,7 @@ fun SettingsScreen(
         Column(Modifier.padding(24.dp)) {
             when (state.tab) {
                 SettingsTab.General -> {
-                    GeneralTab()
+                    GeneralTabRoot()
                 }
 
                 SettingsTab.SearchEngines -> {
