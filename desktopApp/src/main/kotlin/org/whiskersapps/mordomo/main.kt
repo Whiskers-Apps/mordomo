@@ -13,19 +13,13 @@ import org.whiskersapps.mordomo.ui.main_screen.MainScreenRoot
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenVM
 
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import lib.Form
 import org.koin.core.context.GlobalContext.startKoin
-import org.koin.core.parameter.ParametersHolder
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform.getKoin
 
@@ -90,7 +84,6 @@ fun main() {
         val showWindow = windowRepository.showWindow.collectAsState().value
         val settings = settingsRepository.settings.collectAsState().value
         val route = windowRepository.route.collectAsState().value
-
 
         if (settings != null) {
             Window(

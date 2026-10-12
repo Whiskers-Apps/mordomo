@@ -1,6 +1,9 @@
 DEST_DIR := /opt/mordomo
 DIST_DIR := desktopApp/build/compose/binaries/main/app/mordomo
 
+run:
+	./gradlew desktopApp:run
+
 distributable:
 	./gradlew :desktopApp:createDistributable
 

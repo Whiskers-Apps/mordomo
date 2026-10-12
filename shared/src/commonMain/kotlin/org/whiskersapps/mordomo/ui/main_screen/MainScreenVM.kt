@@ -32,6 +32,7 @@ import org.whiskersapps.mordomo.core.features.plugins.PluginsRepository
 import org.whiskersapps.mordomo.core.features.settings.SettingsRepository
 import org.whiskersapps.mordomo.core.features.socket.SocketRepository
 import org.whiskersapps.mordomo.core.features.window.WindowRepository
+import org.whiskersapps.mordomo.core.utils.URL_REGEX
 import org.whiskersapps.mordomo.core.utils.getEngineFaviconPath
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenState
 import org.whiskersapps.mordomo.ui.main_screen.MainScreenIntent as Intent
@@ -66,7 +67,7 @@ class MainScreenVM(
             windowRepository.focusTrigger,
             settingsRepository.settings
         ) { showWindow, _, settings ->
-            if(settings == null) return@combine
+            if (settings == null) return@combine
 
             _state.update {
                 it.copy(
@@ -98,7 +99,6 @@ class MainScreenVM(
         _state.update { it.copy(searchText = text) }
 
         scope.launch {
-
             if (text.isBlank()) {
                 _state.update { it.copy(entries = emptyList(), context = "") }
                 return@launch
@@ -127,6 +127,22 @@ class MainScreenVM(
                 if (searchEngine != null) {
                     setEngineEntry(searchEngine, split.searchText ?: "")
                     return@launch
+                }
+            }
+
+            if (URL_REGEX.matches(text)) {
+                scope.launch {
+                    _state.update {
+                        it.copy(
+                            entries = listOf(
+                                Entry(
+                                    title = "URL",
+                                    description = "Open in browser",
+                                    action = OpenUrl(text),
+                                )
+                            )
+                        )
+                    }
                 }
             }
 
